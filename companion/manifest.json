@@ -1,0 +1,29 @@
+{
+	"id": "nsg-layouts",
+	"name": "nsg2-layouts",
+	"shortname": "nsg",
+	"description": "Module to control nsg2-layouts",
+	"version": "0.0.0",
+	"license": "MIT",
+	"repository": "git+https://github.com/NSGMarathon/companion-module-nsg-layouts.git",
+	"bugs": "https://github.com/NSGMarathon/companion-module-nsg-layouts/issues",
+	"maintainers": [
+		{
+			"name": "inkfarer",
+			"email": "inkfarer@inkfarer.com"
+		}
+	],
+	"legacyIds": [],
+	"runtime": {
+		"type": "node18",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../dist/index.js"
+	},
+	"manufacturer": "Norway Speedrunner Gathering",
+	"products": ["nsg2-layouts"],
+	"keywords": [
+		"NSG",
+		"nsg-layouts"
+	]
+}
