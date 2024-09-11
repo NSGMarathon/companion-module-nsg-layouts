@@ -9,6 +9,7 @@ export enum NsgAction {
 	TimerReset = 'timer_reset',
 	TeamTimer = 'team_timer',
 	ForfeitTeam = 'forfeit_team',
+	StartTwitchCommercial = 'start_twitch_commercial',
 }
 
 export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): CompanionActionDefinitions {
@@ -138,5 +139,22 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 				}
 			},
 		},
+		[NsgAction.StartTwitchCommercial]: {
+			name: 'Start Twitch commercial',
+			options: [
+				{
+					id: 'length',
+					type: 'number',
+					label: 'Length',
+					min: 30,
+					max: 180,
+					step: 30,
+					default: 90
+				}
+			],
+			callback: async (action) => {
+				await socket.sendMessage('twitch:startCommercial', LAYOUT_BUNDLE_NAME, { length: action.options.length })
+			}
+		}
 	}
 }
