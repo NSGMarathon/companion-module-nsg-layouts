@@ -4,14 +4,14 @@ import { CompanionInputFieldDropdown } from '@companion-module/base/dist/module-
 import { Speedrun } from '../types/replicants/schedule'
 
 export function formatTalentIdList(talent: Talent, talentIds: { id: string }[], maxItems = 4) {
-	const slicedTalentIds = talentIds.slice(0, maxItems);
+	const slicedTalentIds = talentIds.slice(0, maxItems)
 	const nameList = slicedTalentIds
-		.map(talentId => talent.find(talentItem => talentItem.id === talentId.id)?.name)
-		.filter(talentName => talentName != null) as string[];
+		.map((talentId) => talent.find((talentItem) => talentItem.id === talentId.id)?.name)
+		.filter((talentName) => talentName != null) as string[]
 	if (talentIds.length !== slicedTalentIds.length) {
-		nameList.push(talentIds.length === maxItems + 1 ? '1 other' : `${talentIds.length - maxItems} others`);
+		nameList.push(talentIds.length === maxItems + 1 ? '1 other' : `${talentIds.length - maxItems} others`)
 	}
-	return prettyPrintList(nameList);
+	return prettyPrintList(nameList)
 }
 
 export function getTeamOption(teams: Speedrun['teams']): CompanionInputFieldDropdown {

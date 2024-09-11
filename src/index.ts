@@ -54,7 +54,18 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 		this.socket = new NodeCGConnector<NsgBundleMap>(
 			this,
 			{ host: config.host, port: config.port },
-			{ [LAYOUT_BUNDLE_NAME]: ['activeSpeedrun', 'nextSpeedrun', 'donationTotal', 'schedule', 'talent', 'timer'] },
+			{
+				[LAYOUT_BUNDLE_NAME]: [
+					'activeSpeedrun',
+					'nextSpeedrun',
+					'donationTotal',
+					'schedule',
+					'talent',
+					'timer',
+					'twitchCommercialState',
+					'twitchData',
+				],
+			},
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
 		)
 
@@ -96,7 +107,9 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 			if (teamResult == null) {
 				result[variableName] = undefined
 			} else {
-				result[variableName] = `${teamResult.time.hours}:${String(teamResult.time.minutes).padStart(2, '0')}:${String(teamResult.time.seconds).padStart(2, '0')}.${String(Math.round(teamResult.time.milliseconds)).padStart(3, '0')[0]}`
+				result[variableName] = `${teamResult.time.hours}:${String(teamResult.time.minutes).padStart(2, '0')}:${String(
+					teamResult.time.seconds
+				).padStart(2, '0')}.${String(Math.round(teamResult.time.milliseconds)).padStart(3, '0')[0]}`
 			}
 		}
 
@@ -153,9 +166,10 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					active_run_name: activeSpeedrun?.title,
 					active_run_category: activeSpeedrun?.category ?? undefined,
 					active_run_index: indices.active,
-					active_run_estimate: activeSpeedrun?.estimate == null
-						? undefined
-						: Duration.fromISO(activeSpeedrun.estimate).shiftTo('hours', 'minutes', 'seconds').toFormat('h:mm:ss'),
+					active_run_estimate:
+						activeSpeedrun?.estimate == null
+							? undefined
+							: Duration.fromISO(activeSpeedrun.estimate).shiftTo('hours', 'minutes', 'seconds').toFormat('h:mm:ss'),
 					...this.getTeamNameVariables(),
 				})
 				this.checkFeedbacks(NsgFeedback.TeamExists)
@@ -168,9 +182,10 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					next_run_name: nextSpeedrun?.title,
 					next_run_category: nextSpeedrun?.category ?? undefined,
 					next_run_index: indices.next,
-					next_run_estimate: nextSpeedrun?.estimate == null
-						? undefined
-						: Duration.fromISO(nextSpeedrun.estimate).shiftTo('hours', 'minutes', 'seconds').toFormat('h:mm:ss'),
+					next_run_estimate:
+						nextSpeedrun?.estimate == null
+							? undefined
+							: Duration.fromISO(nextSpeedrun.estimate).shiftTo('hours', 'minutes', 'seconds').toFormat('h:mm:ss'),
 				})
 				break
 			}

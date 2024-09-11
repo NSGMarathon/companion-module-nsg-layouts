@@ -22,8 +22,5 @@
 	},
 	"manufacturer": "Norway Speedrunner Gathering",
 	"products": ["nsg2-layouts"],
-	"keywords": [
-		"NSG",
-		"nsg-layouts"
-	]
+	"keywords": ["NSG", "nsg-layouts"]
 }

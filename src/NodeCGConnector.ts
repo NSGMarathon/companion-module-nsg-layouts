@@ -119,14 +119,12 @@ export class NodeCGConnector<
 		})
 
 		this.socket.on('connect_error', (err) => {
-			const message = 'code' in err && err.code === 'parser error'
-				? `Socket.io connection error - ${err} (Is your NodeCG installation up to date?)`
-				: `Socket.io connection error - ${err}`
+			const message =
+				'code' in err && err.code === 'parser error'
+					? `Socket.io connection error - ${err} (Is your NodeCG installation up to date?)`
+					: `Socket.io connection error - ${err}`
 
-			this.instance.updateStatus(
-				InstanceStatus.ConnectionFailure,
-				message
-			)
+			this.instance.updateStatus(InstanceStatus.ConnectionFailure, message)
 			this.instance.log('error', message)
 		})
 
@@ -283,7 +281,10 @@ export class NodeCGConnector<
 					if (err != null) {
 						// err can be an object but these types are cooked
 						if (typeof err === 'object') {
-							this.instance.log('error', `Sending message returned error: ${'message' in (err as any) ? (err as any).message : err}`)
+							this.instance.log(
+								'error',
+								`Sending message returned error: ${'message' in (err as any) ? (err as any).message : err}`
+							)
 						} else {
 							this.instance.log('error', `Sending message returned error: ${err}`)
 						}

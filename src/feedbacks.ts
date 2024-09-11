@@ -68,7 +68,7 @@ export function getFeedbackDefinitions(socket: NodeCGConnector<NsgBundleMap>): C
 				const team = teams[feedback.options.team as number]
 				if (team == null) return false
 				const teamResult = teamResults[team.id]
-				return feedback.options.state === 'any' && teamResult != null || teamResult?.state === feedback.options.state
+				return (feedback.options.state === 'any' && teamResult != null) || teamResult?.state === feedback.options.state
 			},
 		},
 		[NsgFeedback.OneTeamTimerState]: {
@@ -93,7 +93,8 @@ export function getFeedbackDefinitions(socket: NodeCGConnector<NsgBundleMap>): C
 				bgcolor: combineRgb(0, 0, 0),
 			},
 			options: [teamOption],
-			callback: (feedback) => (socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun?.teams.length ?? 0) > (feedback.options.team as number)
-		}
+			callback: (feedback) =>
+				(socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun?.teams.length ?? 0) > (feedback.options.team as number),
+		},
 	}
 }

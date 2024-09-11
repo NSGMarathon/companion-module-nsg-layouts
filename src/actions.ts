@@ -32,7 +32,10 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						{ id: 'finish', label: 'Finish' },
 						{ id: 'resume', label: 'Resume' },
 						{ id: 'cycle', label: 'Cycle (Finish if running/paused, resume if finished, start if stopped)' },
-						{ id: 'start-finish-excluding-pause', label: 'Start/Finish excluding pause (Start if stopped, Finish if running)' },
+						{
+							id: 'start-finish-excluding-pause',
+							label: 'Start/Finish excluding pause (Start if stopped, Finish if running)',
+						},
 						{ id: 'start-finish', label: 'Start/Finish (Start if stopped, Finish if running/paused)' },
 					],
 				},
@@ -44,12 +47,14 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 
 				if (timerState == null) return
 
-				if (['start', 'cycle', 'start-finish-excluding-pause', 'start-finish'].includes(behavior) && timerState === 'STOPPED') {
+				if (
+					['start', 'cycle', 'start-finish-excluding-pause', 'start-finish'].includes(behavior) &&
+					timerState === 'STOPPED'
+				) {
 					await socket.sendMessage('timer:start', LAYOUT_BUNDLE_NAME)
 				} else if (
 					hasOneTeam &&
-					((['finish', 'cycle', 'start-finish'].includes(behavior) &&
-						['RUNNING', 'PAUSED'].includes(timerState)) ||
+					((['finish', 'cycle', 'start-finish'].includes(behavior) && ['RUNNING', 'PAUSED'].includes(timerState)) ||
 						(behavior === 'start-finish-excluding-pause' && timerState === 'RUNNING'))
 				) {
 					await socket.sendMessage('timer:stop', LAYOUT_BUNDLE_NAME)
@@ -149,12 +154,12 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 					min: 30,
 					max: 180,
 					step: 30,
-					default: 90
-				}
+					default: 90,
+				},
 			],
 			callback: async (action) => {
 				await socket.sendMessage('twitch:startCommercial', LAYOUT_BUNDLE_NAME, { length: action.options.length })
-			}
-		}
+			},
+		},
 	}
 }
