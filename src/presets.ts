@@ -280,7 +280,7 @@ export function getPresetDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 		main_timer_start_stop_excluding_pause: {
 			type: 'button',
 			category: 'Timer',
-			name: 'Main timer Start/Stop excluding pause',
+			name: 'Main timer Start/Stop excluding pause (Start if stopped, Finish if running)',
 			style: {
 				text: 'MAIN TIMER',
 				size: '14',
