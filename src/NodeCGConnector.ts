@@ -281,7 +281,12 @@ export class NodeCGConnector<
 				},
 				(err, result) => {
 					if (err != null) {
-						this.instance.log('error', `Sending message returned error: ${err}`)
+						// err can be an object but these types are cooked
+						if (typeof err === 'object') {
+							this.instance.log('error', `Sending message returned error: ${'message' in (err as any) ? (err as any).message : err}`)
+						} else {
+							this.instance.log('error', `Sending message returned error: ${err}`)
+						}
 						reject(err)
 					} else {
 						resolve(result)
