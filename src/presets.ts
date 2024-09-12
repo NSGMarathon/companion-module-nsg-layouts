@@ -3,8 +3,12 @@ import { NsgFeedback } from './feedbacks'
 import { NsgAction } from './actions'
 import { NodeCGConnector } from './NodeCGConnector'
 import { LAYOUT_BUNDLE_NAME, NsgBundleMap } from './util'
+import { NsgLayoutsInstance } from './index'
 
-export function getPresetDefinitions(socket: NodeCGConnector<NsgBundleMap>): CompanionPresetDefinitions {
+export function getPresetDefinitions(
+	instance: NsgLayoutsInstance,
+	socket: NodeCGConnector<NsgBundleMap>
+): CompanionPresetDefinitions {
 	const timerDisplayFeedbacks: CompanionPresetFeedback[] = [
 		{
 			feedbackId: NsgFeedback.TimerState,
@@ -486,5 +490,92 @@ export function getPresetDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 			feedbacks: timerDisplayFeedbacks,
 			steps: [],
 		},
+		twitch_commercial_state: {
+			type: 'button',
+			category: 'Twitch Commercials',
+			name: 'Twitch commercial state',
+			style: {
+				text: 'TWITCH ADS',
+				size: '14',
+				color: combineRgb(36, 36, 36),
+				bgcolor: combineRgb(0, 0, 0),
+			},
+			feedbacks: [
+				{
+					feedbackId: NsgFeedback.TwitchLoginExists,
+					options: {},
+					style: {
+						color: combineRgb(0, 0, 0),
+						bgcolor: combineRgb(0, 255, 0),
+						text: 'TWITCH ADS READY',
+					},
+				},
+				{
+					feedbackId: NsgFeedback.TwitchCommercialCooldownInProgress,
+					options: {},
+					style: {
+						bgcolor: combineRgb(255, 255, 0),
+						color: combineRgb(0, 0, 0),
+						size: '14',
+						text: `AD TIMEOUT $(${instance.label}:twitch_commercial_retry_time)`,
+					},
+				},
+				{
+					feedbackId: NsgFeedback.TwitchCommercialsPlaying,
+					options: {},
+					style: {
+						bgcolor: combineRgb(255, 0, 0),
+						color: combineRgb(255, 255, 255),
+						size: '14',
+						text: `ADS RUNNING $(${instance.label}:twitch_commercial_end_time)`,
+					},
+				},
+			],
+			steps: [],
+		},
+		...[30, 60, 90, 120, 150, 180].reduce((result, length) => {
+			result[`twitch_commercial_${length}`] = {
+				type: 'button',
+				category: 'Twitch Commercials',
+				name: `Play Twitch commercial (${length}s)`,
+				style: {
+					text: `PLAY AD\\n${length}s`,
+					size: '14',
+					color: combineRgb(255, 255, 255),
+					bgcolor: combineRgb(0, 0, 0),
+				},
+				feedbacks: [
+					{
+						feedbackId: NsgFeedback.TwitchLoginExists,
+						options: {},
+						isInverted: true,
+						style: {
+							color: combineRgb(36, 36, 36),
+						},
+					},
+					{
+						feedbackId: NsgFeedback.TwitchCommercialCooldownInProgress,
+						options: {},
+						style: {
+							color: combineRgb(36, 36, 36),
+						},
+					},
+				],
+				steps: [
+					{
+						down: [
+							{
+								actionId: NsgAction.StartTwitchCommercial,
+								options: {
+									length,
+								},
+							},
+						],
+						up: [],
+					},
+				],
+			}
+			return result
+		}, {} as CompanionPresetDefinitions),
 	}
 }

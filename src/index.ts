@@ -11,7 +11,7 @@ import { getVariableDefinitions } from './variables'
 import { CompanionVariableValue } from '@companion-module/base/dist/module-api/variable'
 import { formatCurrencyAmount, isBlank } from './helpers/StringHelper'
 import { formatTalentIdList } from './helpers/TalentHelper'
-import { Duration } from 'luxon'
+import { DateTime, Duration } from 'luxon'
 
 interface ModuleConfig {
 	host?: string
@@ -21,6 +21,9 @@ interface ModuleConfig {
 export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 	private socket!: NodeCGConnector<NsgBundleMap>
 	private readonly timerUpdateFn: (time?: Timer) => void
+	private twitchCommercialTimerUpdateInterval: NodeJS.Timeout | undefined = undefined
+	twitchCommercialsPlaying: boolean = false
+	canStartTwitchCommercials: boolean = false
 
 	constructor(internal: unknown) {
 		super(internal)
@@ -69,9 +72,9 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
 		)
 
-		this.setPresetDefinitions(getPresetDefinitions(this.socket))
+		this.setPresetDefinitions(getPresetDefinitions(this, this.socket))
 		this.setVariableDefinitions(getVariableDefinitions(this.socket))
-		this.setFeedbackDefinitions(getFeedbackDefinitions(this.socket))
+		this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
 		this.setActionDefinitions(getActionDefinitions(this.socket))
 
 		this.socket.on('replicantUpdate', (name) => {
@@ -90,6 +93,8 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 			host: config.host,
 			port: config.port,
 		})
+		this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
+		this.setPresetDefinitions(getPresetDefinitions(this, this.socket))
 	}
 
 	public getConfigFields(): SomeCompanionConfigField[] {
@@ -152,13 +157,40 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 		}
 	}
 
+	private updateTwitchCommercialVariables() {
+		const getDiffNow = (date: string | undefined): string | undefined => {
+			if (date == null) {
+				return undefined
+			}
+
+			const diffNow = DateTime.fromISO(date).diffNow()
+			if (diffNow.milliseconds < 0) {
+				return undefined
+			}
+			return diffNow.shiftTo('minutes', 'seconds').toFormat('m:ss')
+		}
+
+		const endTimeText = getDiffNow(this.socket.replicants[LAYOUT_BUNDLE_NAME].twitchCommercialState?.endTime)
+		const retryTimeText = getDiffNow(this.socket.replicants[LAYOUT_BUNDLE_NAME].twitchCommercialState?.retryTime)
+		this.canStartTwitchCommercials = retryTimeText == null
+		this.twitchCommercialsPlaying = endTimeText != null
+		this.setVariableValues({
+			twitch_commercial_retry_time: retryTimeText,
+			twitch_commercial_end_time: endTimeText,
+		})
+		this.checkFeedbacks(NsgFeedback.TwitchCommercialCooldownInProgress, NsgFeedback.TwitchCommercialsPlaying)
+		if (endTimeText == null && retryTimeText == null) {
+			clearInterval(this.twitchCommercialTimerUpdateInterval)
+		}
+	}
+
 	assignDynamicVariablesAndFeedback(replicantName: keyof NsgLayoutsReplicantMap | 'bundles') {
 		switch (replicantName) {
 			case 'activeSpeedrun': {
 				this.setVariableDefinitions(getVariableDefinitions(this.socket))
 				this.setActionDefinitions(getActionDefinitions(this.socket))
-				this.setFeedbackDefinitions(getFeedbackDefinitions(this.socket))
-				this.setPresetDefinitions(getPresetDefinitions(this.socket))
+				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
+				this.setPresetDefinitions(getPresetDefinitions(this, this.socket))
 				const activeSpeedrun = this.socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun
 				const indices = this.getSpeedrunIndices()
 				this.setVariableValues({
@@ -210,6 +242,15 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					donation_total: `${formatCurrencyAmount(rawTotal)} kr`,
 					donation_total_raw: rawTotal,
 				})
+				break
+			case 'twitchCommercialState':
+				clearInterval(this.twitchCommercialTimerUpdateInterval)
+				this.updateTwitchCommercialVariables()
+				this.twitchCommercialTimerUpdateInterval = setInterval(this.updateTwitchCommercialVariables.bind(this), 250)
+				break
+			case 'twitchData':
+				this.checkFeedbacks(NsgFeedback.TwitchLoginExists)
+				break
 		}
 	}
 }

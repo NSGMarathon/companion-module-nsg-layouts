@@ -3,15 +3,22 @@ import { LAYOUT_BUNDLE_NAME, NsgBundleMap } from './util'
 import { NodeCGConnector } from './NodeCGConnector'
 import { CompanionInputFieldDropdown } from '@companion-module/base/dist/module-api/input'
 import { getTeamOption } from './helpers/TalentHelper'
+import { NsgLayoutsInstance } from './index'
 
 export enum NsgFeedback {
 	TimerState = 'timer_state',
 	TeamTimerState = 'team_timer_state',
 	OneTeamTimerState = 'one_team_timer_state',
 	TeamExists = 'team_exists',
+	TwitchCommercialsPlaying = 'twitch_commercials_playing',
+	TwitchCommercialCooldownInProgress = 'twitch_commercial_cooldown_in_progress',
+	TwitchLoginExists = 'twitch_login_exists',
 }
 
-export function getFeedbackDefinitions(socket: NodeCGConnector<NsgBundleMap>): CompanionFeedbackDefinitions {
+export function getFeedbackDefinitions(
+	instance: NsgLayoutsInstance,
+	socket: NodeCGConnector<NsgBundleMap>
+): CompanionFeedbackDefinitions {
 	const timerStateOption: CompanionInputFieldDropdown = {
 		id: 'state',
 		type: 'dropdown',
@@ -95,6 +102,43 @@ export function getFeedbackDefinitions(socket: NodeCGConnector<NsgBundleMap>): C
 			options: [teamOption],
 			callback: (feedback) =>
 				(socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun?.teams.length ?? 0) > (feedback.options.team as number),
+		},
+		[NsgFeedback.TwitchCommercialsPlaying]: {
+			type: 'boolean',
+			name: 'Twitch commercials running',
+			description: 'Change style if Twitch commercials are running',
+			defaultStyle: {
+				bgcolor: combineRgb(255, 0, 0),
+				color: combineRgb(255, 255, 255),
+				size: '14',
+				text: `ADS RUNNING $(${instance.label}:twitch_commercial_end_time)`,
+			},
+			options: [],
+			callback: () => instance.twitchCommercialsPlaying,
+		},
+		[NsgFeedback.TwitchCommercialCooldownInProgress]: {
+			type: 'boolean',
+			name: 'Twitch commercial cooldown in progress',
+			description: 'Change style if Twitch commercials cannot be played yet',
+			defaultStyle: {
+				bgcolor: combineRgb(255, 255, 0),
+				color: combineRgb(0, 0, 0),
+				size: '14',
+				text: `AD TIMEOUT $(${instance.label}:twitch_commercial_retry_time)`,
+			},
+			options: [],
+			callback: () => !instance.canStartTwitchCommercials,
+		},
+		[NsgFeedback.TwitchLoginExists]: {
+			type: 'boolean',
+			name: 'Twitch login exists',
+			description: 'Change style if logged in to Twitch',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 0, 0),
+				color: combineRgb(255, 255, 255),
+			},
+			options: [],
+			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].twitchData?.state !== 'NOT_LOGGED_IN',
 		},
 	}
 }

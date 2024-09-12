@@ -4,6 +4,8 @@ import { NextSpeedrun } from './types/replicants/nextSpeedrun'
 import { Schedule } from './types/replicants/schedule'
 import { Talent } from './types/replicants/talent'
 import { Timer } from './types/replicants/timer'
+import { TwitchCommercialState } from './types/replicants/twitchCommercialState'
+import { TwitchData } from './types/replicants/twitchData'
 
 export const LAYOUT_BUNDLE_NAME = 'nsg2-layouts'
 
@@ -18,4 +20,6 @@ export interface NsgLayoutsReplicantMap {
 	schedule?: Schedule
 	talent?: Talent
 	timer?: Timer
+	twitchCommercialState?: TwitchCommercialState
+	twitchData?: TwitchData
 }

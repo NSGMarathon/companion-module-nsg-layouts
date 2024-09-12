@@ -21,6 +21,8 @@ export function getVariableDefinitions(socket: NodeCGConnector<NsgBundleMap>): C
 		{ variableId: 'timer_raw', name: 'Milliseconds since timer start' },
 		{ variableId: 'donation_total', name: 'Total amount donated' },
 		{ variableId: 'donation_total_raw', name: 'Total amount donated as an unformatted number' },
+		{ variableId: 'twitch_commercial_retry_time', name: 'Time until a new Twitch commercial may be played' },
+		{ variableId: 'twitch_commercial_end_time', name: 'Time until the current Twitch commercial ends' },
 	]
 
 	const teams = socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun?.teams ?? []
