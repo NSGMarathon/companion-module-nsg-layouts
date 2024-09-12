@@ -23,3 +23,25 @@ export function getTeamOption(teams: Speedrun['teams']): CompanionInputFieldDrop
 		choices: Array.from({ length: Math.max(4, teams.length) }, (_, i) => ({ id: i, label: `Team ${i + 1}` })),
 	}
 }
+
+export function formatSpeedrunTeamList(talent: Talent, teams: { playerIds: { id: string }[] }[]) {
+	const playerCount = teams.reduce((result, team) => {
+		result += team.playerIds.length;
+		return result;
+	}, 0);
+
+	if (playerCount === 0) {
+		return 'No players?!';
+	} else if (playerCount >= 6) {
+		return `${playerCount} players`;
+	}
+
+	return teams.reduce((result, team, index, array) => {
+		result += prettyPrintList(team.playerIds.map(playerId =>
+			talent.find((talentItem) => talentItem.id === playerId.id)?.name ?? `Unknown Talent ${playerId.id}`));
+		if (index !== array.length - 1) {
+			result += ' vs. ';
+		}
+		return result;
+	}, '');
+}

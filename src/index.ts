@@ -10,7 +10,7 @@ import { getPresetDefinitions } from './presets'
 import { getVariableDefinitions } from './variables'
 import { CompanionVariableValue } from '@companion-module/base/dist/module-api/variable'
 import { formatCurrencyAmount, isBlank } from './helpers/StringHelper'
-import { formatTalentIdList } from './helpers/TalentHelper'
+import { formatSpeedrunTeamList, formatTalentIdList } from './helpers/TalentHelper'
 import { DateTime, Duration } from 'luxon'
 
 interface ModuleConfig {
@@ -218,6 +218,10 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 						nextSpeedrun?.estimate == null
 							? undefined
 							: Duration.fromISO(nextSpeedrun.estimate).shiftTo('hours', 'minutes', 'seconds').toFormat('h:mm:ss'),
+					next_run_players: formatSpeedrunTeamList(
+						this.socket.replicants[LAYOUT_BUNDLE_NAME].talent ?? [],
+						nextSpeedrun?.teams ?? []
+					),
 				})
 				break
 			}
@@ -231,7 +235,13 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				break
 			}
 			case 'talent':
-				this.setVariableValues(this.getTeamNameVariables())
+				this.setVariableValues({
+					...this.getTeamNameVariables(),
+					next_run_players: formatSpeedrunTeamList(
+						this.socket.replicants[LAYOUT_BUNDLE_NAME].talent ?? [],
+						this.socket.replicants[LAYOUT_BUNDLE_NAME].nextSpeedrun?.teams ?? []
+					),
+				})
 				break
 			case 'timer':
 				this.timerUpdateFn(this.socket.replicants[LAYOUT_BUNDLE_NAME].timer)

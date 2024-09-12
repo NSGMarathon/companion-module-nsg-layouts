@@ -11,6 +11,7 @@ export function getVariableDefinitions(socket: NodeCGConnector<NsgBundleMap>): C
 		{ variableId: 'next_run_name', name: "The next speedrun's name" },
 		{ variableId: 'next_run_category', name: "The next speedrun's category" },
 		{ variableId: 'next_run_estimate', name: "The next speedrun's estimate" },
+		{ variableId: 'next_run_players', name: "The next speedrun's players" },
 		{ variableId: 'next_run_index', name: "The next speedrun's order out of all speedruns" },
 		{ variableId: 'speedrun_count', name: 'Number of speedruns' },
 		{ variableId: 'team_count', name: 'Number of teams in current speedrun' },
