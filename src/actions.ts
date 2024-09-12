@@ -155,6 +155,7 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 					max: 180,
 					step: 30,
 					default: 90,
+					range: true,
 				},
 			],
 			callback: async (action) => {
