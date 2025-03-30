@@ -69,6 +69,8 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					'timer',
 					'twitchCommercialState',
 					'twitchData',
+					'obsConfig',
+					'obsState',
 				],
 			},
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
@@ -262,6 +264,12 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				break
 			case 'twitchData':
 				this.checkFeedbacks(NsgFeedback.TwitchLoginExists)
+				break
+			case 'obsConfig':
+			case 'obsState':
+				this.checkFeedbacks(NsgFeedback.SceneInProgram, NsgFeedback.GameLayoutInProgram, NsgFeedback.IntermissionInProgram)
+				this.setActionDefinitions(getActionDefinitions(this.socket))
+				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
 				break
 		}
 	}

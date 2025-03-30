@@ -1,7 +1,9 @@
 import { CompanionActionDefinitions } from '@companion-module/base'
 import { NodeCGConnector } from './NodeCGConnector'
-import { LAYOUT_BUNDLE_NAME, NsgBundleMap } from './util'
+import { LAYOUT_BUNDLE_NAME, LAYOUT_FEED_COUNT, NsgBundleMap } from './util'
 import { getTeamOption } from './helpers/TalentHelper'
+import { ObsConfig } from './types/replicants/obsConfig'
+import range from 'lodash/range'
 
 export enum NsgAction {
 	Timer = 'timer',
@@ -12,6 +14,19 @@ export enum NsgAction {
 	StartTwitchCommercial = 'start_twitch_commercial',
 	SeekToNextRun = 'seek_to_next_run',
 	SeekToPreviousRun = 'seek_to_previous_run',
+	SwitchToIntermission = 'switch_to_intermission',
+	SwitchToGameLayout = 'switch_to_game_layout',
+	SwitchToScene = 'switch_to_scene',
+}
+
+async function switchScene(socket: NodeCGConnector<NsgBundleMap>, sceneNameGetter: (config: ObsConfig) => string | null | undefined) {
+	const obsState = socket.replicants[LAYOUT_BUNDLE_NAME].obsState;
+	const obsConfig = socket.replicants[LAYOUT_BUNDLE_NAME].obsConfig
+	if (obsConfig == null || obsState == null) return;
+	const sceneName = sceneNameGetter(obsConfig);
+	if (!obsState.transitionInProgress && obsState.status === 'CONNECTED' && obsState.currentScene !== sceneName) {
+		await socket.sendMessage('obs:setCurrentScene', LAYOUT_BUNDLE_NAME, { sceneName });
+	}
 }
 
 export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): CompanionActionDefinitions {
@@ -178,5 +193,48 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 				await socket.sendMessage('speedrun:seekToPreviousRun', LAYOUT_BUNDLE_NAME)
 			},
 		},
+		[NsgAction.SwitchToIntermission]: {
+			name: 'Switch to intermission scene',
+			options: [],
+			callback: async () => {
+				await switchScene(socket, config => config.intermissionScene);
+			}
+		},
+		[NsgAction.SwitchToGameLayout]: {
+			name: 'Switch to game layout',
+			options: [
+				{
+					id: 'feedIndex',
+					type: 'dropdown',
+					label: 'Feed',
+					default: 0,
+					choices: range(LAYOUT_FEED_COUNT).map(i => ({
+						id: i,
+						label: i === 0 ? 'Main Feed' : `Feed ${i + 1}`
+					}))
+				}
+			],
+			callback: async (action) => {
+				await switchScene(socket, config => config.gameplayScenes[action.options.feedIndex as number]);
+			}
+		},
+		[NsgAction.SwitchToScene]: {
+			name: 'Switch to scene',
+			options: [
+				{
+					id: 'sceneName',
+					type: 'dropdown',
+					label: 'Scene name',
+					default: socket.replicants[LAYOUT_BUNDLE_NAME].obsState?.scenes?.[0] ?? '',
+					choices: (socket.replicants[LAYOUT_BUNDLE_NAME].obsState?.scenes ?? []).map(sceneName => ({
+						id: sceneName,
+						label: sceneName
+					}))
+				}
+			],
+			callback: async (action) => {
+				await switchScene(socket, () => action.options.sceneName as string | undefined);
+			}
+		}
 	}
 }

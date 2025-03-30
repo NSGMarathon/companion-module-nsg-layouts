@@ -1,9 +1,11 @@
 import { combineRgb, CompanionFeedbackDefinitions } from '@companion-module/base'
-import { LAYOUT_BUNDLE_NAME, NsgBundleMap } from './util'
+import { LAYOUT_BUNDLE_NAME, LAYOUT_FEED_COUNT, NsgBundleMap } from './util'
 import { NodeCGConnector } from './NodeCGConnector'
 import { CompanionInputFieldDropdown } from '@companion-module/base/dist/module-api/input'
 import { getTeamOption } from './helpers/TalentHelper'
 import { NsgLayoutsInstance } from './index'
+import { ObsConfig } from './types/replicants/obsConfig'
+import range from 'lodash/range'
 
 export enum NsgFeedback {
 	TimerState = 'timer_state',
@@ -13,6 +15,17 @@ export enum NsgFeedback {
 	TwitchCommercialsPlaying = 'twitch_commercials_playing',
 	TwitchCommercialCooldownInProgress = 'twitch_commercial_cooldown_in_progress',
 	TwitchLoginExists = 'twitch_login_exists',
+	IntermissionInProgram = 'intermission_in_program',
+	GameLayoutInProgram = 'game_layout_in_program',
+	SceneInProgram = 'scene_in_program',
+}
+
+function isSceneInProgram(socket: NodeCGConnector<NsgBundleMap>, sceneNameGetter: (config: ObsConfig) => string | null | undefined) {
+	const obsState = socket.replicants[LAYOUT_BUNDLE_NAME].obsState;
+	const obsConfig = socket.replicants[LAYOUT_BUNDLE_NAME].obsConfig
+	if (obsConfig == null || obsState == null) return false;
+	const sceneName = sceneNameGetter(obsConfig);
+	return obsState.currentScene != null && sceneName != null && obsState.currentScene === sceneName;
 }
 
 export function getFeedbackDefinitions(
@@ -139,6 +152,61 @@ export function getFeedbackDefinitions(
 			},
 			options: [],
 			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].twitchData?.state !== 'NOT_LOGGED_IN',
+		},
+		[NsgFeedback.IntermissionInProgram]: {
+			type: 'boolean',
+			name: 'Intermission in program',
+			description: 'Change style if intermission scene is in program',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 0, 0),
+				color: combineRgb(255, 255, 255),
+			},
+			options: [],
+			callback: () => isSceneInProgram(socket, config => config.intermissionScene)
+		},
+		[NsgFeedback.GameLayoutInProgram]: {
+			type: 'boolean',
+			name: 'Game layout in program',
+			description: 'Change style if game layout scene is in program',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 0, 0),
+				color: combineRgb(255, 255, 255),
+			},
+			options: [
+				{
+					id: 'feedIndex',
+					type: 'dropdown',
+					label: 'Feed',
+					default: 0,
+					choices: range(LAYOUT_FEED_COUNT).map(i => ({
+						id: i,
+						label: i === 0 ? 'Main Feed' : `Feed ${i + 1}`
+					}))
+				}
+			],
+			callback: (feedback) => isSceneInProgram(socket, config => config.gameplayScenes[feedback.options.feedIndex as number])
+		},
+		[NsgFeedback.SceneInProgram]: {
+			type: 'boolean',
+			name: 'Scene in program',
+			description: 'Change style if scene is in program',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 0, 0),
+				color: combineRgb(255, 255, 255),
+			},
+			options: [
+				{
+					id: 'sceneName',
+					type: 'dropdown',
+					label: 'Scene name',
+					default: socket.replicants[LAYOUT_BUNDLE_NAME].obsState?.scenes?.[0] ?? '',
+					choices: (socket.replicants[LAYOUT_BUNDLE_NAME].obsState?.scenes ?? []).map(sceneName => ({
+						id: sceneName,
+						label: sceneName
+					}))
+				}
+			],
+			callback: (feedback) => isSceneInProgram(socket, () => feedback.options.sceneName as string | undefined)
 		},
 	}
 }
