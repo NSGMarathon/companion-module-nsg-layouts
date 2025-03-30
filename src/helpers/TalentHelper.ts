@@ -1,17 +1,22 @@
-import { prettyPrintList } from './StringHelper'
-import { Talent } from '../types/replicants/talent'
+import { isBlank, prettyPrintList } from './StringHelper'
 import { CompanionInputFieldDropdown } from '@companion-module/base/dist/module-api/input'
 import { Speedrun } from '../types/replicants/schedule'
+import { ScheduleItem } from '../types/ScheduleHelpers'
 
-export function formatTalentIdList(talent: Talent, talentIds: { id: string }[], maxItems = 4) {
-	const slicedTalentIds = talentIds.slice(0, maxItems)
-	const nameList = slicedTalentIds
-		.map((talentId) => talent.find((talentItem) => talentItem.id === talentId.id)?.name)
-		.filter((talentName) => talentName != null) as string[]
-	if (talentIds.length !== slicedTalentIds.length) {
-		nameList.push(talentIds.length === maxItems + 1 ? '1 other' : `${talentIds.length - maxItems} others`)
+export function prettyPrintTalentIdList(talentIds: { id: string }[], talentNameGetter: (id: string) => string | undefined | null, maxItems = 4): string {
+	const uniqueTalentIds = Array.from(new Set(talentIds.map(talentId => talentId.id)));
+	const nameList = uniqueTalentIds
+		.map(talentId => talentNameGetter(talentId))
+		.filter(talentName => talentName != null);
+	if (nameList.length === 0) {
+		return '(Somebody?)';
 	}
-	return prettyPrintList(nameList)
+	const slicedNameList = nameList.slice(0, maxItems);
+	if (uniqueTalentIds.length !== slicedNameList.length) {
+		const overflowCount = uniqueTalentIds.length - slicedNameList.length;
+		slicedNameList.push(overflowCount === 1 ? '1 other' : `${overflowCount} others`);
+	}
+	return prettyPrintList(slicedNameList);
 }
 
 export function getTeamOption(teams: Speedrun['teams']): CompanionInputFieldDropdown {
@@ -24,24 +29,17 @@ export function getTeamOption(teams: Speedrun['teams']): CompanionInputFieldDrop
 	}
 }
 
-export function formatSpeedrunTeamList(talent: Talent, teams: { playerIds: { id: string }[] }[]) {
-	const playerCount = teams.reduce((result, team) => {
-		result += team.playerIds.length;
-		return result;
-	}, 0);
-
-	if (playerCount === 0) {
-		return 'No players?!';
-	} else if (playerCount >= 6) {
-		return `${playerCount} players`;
+export function formatScheduleItemTalentList(scheduleItem: ScheduleItem, talentNameGetter: (id: string) => string | undefined | null): string {
+	if (scheduleItem.type === 'SPEEDRUN') {
+		const maxTalentItemsPerTeam = scheduleItem.teams.length > 1 ? 3 : 6;
+		return scheduleItem.teams.reduce((result: string, team: Speedrun['teams'][number], index: number, array: Speedrun['teams']) => {
+			result += isBlank(team.name) ? prettyPrintTalentIdList(team.playerIds, talentNameGetter, maxTalentItemsPerTeam) : team.name;
+			if (index !== array.length - 1) {
+				result += ' vs. ';
+			}
+			return result;
+		}, '');
+	} else {
+		return prettyPrintTalentIdList(scheduleItem.talentIds, talentNameGetter);
 	}
-
-	return teams.reduce((result, team, index, array) => {
-		result += prettyPrintList(team.playerIds.map(playerId =>
-			talent.find((talentItem) => talentItem.id === playerId.id)?.name ?? `Unknown Talent ${playerId.id}`));
-		if (index !== array.length - 1) {
-			result += ' vs. ';
-		}
-		return result;
-	}, '');
 }

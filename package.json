@@ -11,7 +11,7 @@
 	"license": "MIT",
 	"prettier": "@companion-module/tools/.prettierrc.json",
 	"dependencies": {
-		"@companion-module/base": "~1.6.0",
+		"@companion-module/base": "~1.11.3",
 		"lodash": "^4.17.21",
 		"luxon": "^3.4.4",
 		"object-path": "^0.11.8",
@@ -20,7 +20,7 @@
 		"tslib": "^2.4.1"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^1.5.1",
+		"@companion-module/tools": "2.2.2",
 		"@nodecg/types": "~2.1.12",
 		"@types/lodash": "^4.17.7",
 		"@types/luxon": "^2.3.2",

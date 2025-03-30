@@ -10,7 +10,7 @@ import { getPresetDefinitions } from './presets'
 import { getVariableDefinitions } from './variables'
 import { CompanionVariableValue } from '@companion-module/base/dist/module-api/variable'
 import { formatCurrencyAmount, isBlank } from './helpers/StringHelper'
-import { formatSpeedrunTeamList, formatTalentIdList } from './helpers/TalentHelper'
+import { formatScheduleItemTalentList, prettyPrintTalentIdList } from './helpers/TalentHelper'
 import { DateTime, Duration } from 'luxon'
 
 interface ModuleConfig {
@@ -21,6 +21,7 @@ interface ModuleConfig {
 export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 	private socket!: NodeCGConnector<NsgBundleMap>
 	private readonly timerUpdateFn: (time?: Timer) => void
+	private readonly talentNameGetter: (id: string) => string | undefined | null
 	private twitchCommercialTimerUpdateInterval: NodeJS.Timeout | undefined = undefined
 	twitchCommercialsPlaying: boolean = false
 	canStartTwitchCommercials: boolean = false
@@ -51,6 +52,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				})
 			}
 		}, 500)
+		this.talentNameGetter = talentId => (this.socket.replicants[LAYOUT_BUNDLE_NAME].talent ?? []).find(talentItem => talentItem.id === talentId)?.name
 	}
 
 	public async init(config: ModuleConfig): Promise<void> {
@@ -132,7 +134,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				result[variableName] = undefined
 			} else {
 				result[variableName] = isBlank(team.name)
-					? formatTalentIdList(this.socket.replicants[LAYOUT_BUNDLE_NAME].talent ?? [], team.playerIds)
+					? prettyPrintTalentIdList(team.playerIds, this.talentNameGetter)
 					: team.name
 			}
 		}
@@ -218,9 +220,9 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 						nextSpeedrun?.estimate == null
 							? undefined
 							: Duration.fromISO(nextSpeedrun.estimate).shiftTo('hours', 'minutes', 'seconds').toFormat('h:mm:ss'),
-					next_run_players: formatSpeedrunTeamList(
-						this.socket.replicants[LAYOUT_BUNDLE_NAME].talent ?? [],
-						nextSpeedrun?.teams ?? []
+					next_run_players: formatScheduleItemTalentList(
+						nextSpeedrun,
+						this.talentNameGetter
 					),
 				})
 				break
@@ -237,9 +239,9 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 			case 'talent':
 				this.setVariableValues({
 					...this.getTeamNameVariables(),
-					next_run_players: formatSpeedrunTeamList(
-						this.socket.replicants[LAYOUT_BUNDLE_NAME].talent ?? [],
-						this.socket.replicants[LAYOUT_BUNDLE_NAME].nextSpeedrun?.teams ?? []
+					next_run_players: formatScheduleItemTalentList(
+						this.socket.replicants[LAYOUT_BUNDLE_NAME].nextSpeedrun,
+						this.talentNameGetter
 					),
 				})
 				break

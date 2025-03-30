@@ -8,6 +8,7 @@
 export interface Schedule {
 	source: 'UNKNOWN' | 'OENGUS';
 	id?: string;
+	startTime: string;
 	sourceSpecificData?: {
 		oengus?: {
 			scheduleId?: number;
@@ -24,6 +25,7 @@ export interface Speedrun {
 	twitchCategory?: null | {
 		name: string;
 		id: string;
+		igdbUrl?: string;
 	};
 	system?: string | null;
 	releaseYear?: string | null;
@@ -31,9 +33,18 @@ export interface Speedrun {
 	estimate: string;
 	setupTime?: string | null;
 	scheduledStartTime: string;
+	timerStartTime?: string | null;
+	firstGameplayTransitionTime?: string | null;
 	relay?: boolean | null;
 	emulated?: boolean | null;
 	layout?: string | null;
+	videoFile?:
+		| null
+		| (VideoFile & {
+				timerStartTime: string;
+				timerStopTime: string;
+				[k: string]: unknown;
+		  });
 	teams: {
 		id: string;
 		name?: string;
@@ -48,6 +59,12 @@ export interface Speedrun {
 	}[];
 	[k: string]: unknown;
 }
+export interface VideoFile {
+	name: string;
+	path: string;
+	type: 'LOCAL_FILE';
+	[k: string]: unknown;
+}
 export interface OtherScheduleItem {
 	id: string;
 	externalId?: string | null;
@@ -56,6 +73,7 @@ export interface OtherScheduleItem {
 	twitchCategory?: null | {
 		name: string;
 		id: string;
+		igdbUrl?: string;
 	};
 	estimate: string;
 	setupTime?: string | null;
