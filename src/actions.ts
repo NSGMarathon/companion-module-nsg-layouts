@@ -10,6 +10,8 @@ export enum NsgAction {
 	TeamTimer = 'team_timer',
 	ForfeitTeam = 'forfeit_team',
 	StartTwitchCommercial = 'start_twitch_commercial',
+	SeekToNextRun = 'seek_to_next_run',
+	SeekToPreviousRun = 'seek_to_previous_run',
 }
 
 export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): CompanionActionDefinitions {
@@ -160,6 +162,20 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 			],
 			callback: async (action) => {
 				await socket.sendMessage('twitch:startCommercial', LAYOUT_BUNDLE_NAME, { length: action.options.length })
+			},
+		},
+		[NsgAction.SeekToNextRun]: {
+			name: 'Seek to next run',
+			options: [],
+			callback: async () => {
+				await socket.sendMessage('speedrun:seekToNextRun', LAYOUT_BUNDLE_NAME)
+			},
+		},
+		[NsgAction.SeekToPreviousRun]: {
+			name: 'Seek to previous run',
+			options: [],
+			callback: async () => {
+				await socket.sendMessage('speedrun:seekToPreviousRun', LAYOUT_BUNDLE_NAME)
 			},
 		},
 	}
