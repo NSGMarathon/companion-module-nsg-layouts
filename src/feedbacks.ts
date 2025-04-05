@@ -18,6 +18,7 @@ export enum NsgFeedback {
 	IntermissionInProgram = 'intermission_in_program',
 	GameLayoutInProgram = 'game_layout_in_program',
 	SceneInProgram = 'scene_in_program',
+	InterstitialVideoPlaying = 'interstitial_video_playing'
 }
 
 function isSceneInProgram(socket: NodeCGConnector<NsgBundleMap>, sceneNameGetter: (config: ObsConfig) => string | null | undefined) {
@@ -208,5 +209,15 @@ export function getFeedbackDefinitions(
 			],
 			callback: (feedback) => isSceneInProgram(socket, () => feedback.options.sceneName as string | undefined)
 		},
+		[NsgFeedback.InterstitialVideoPlaying]: {
+			type: 'boolean',
+			name: 'Interstitial video playing',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 255, 0),
+				color: combineRgb(0, 0, 0),
+			},
+			options: [],
+			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].interstitialVideoState?.isRunning ?? false
+		}
 	}
 }

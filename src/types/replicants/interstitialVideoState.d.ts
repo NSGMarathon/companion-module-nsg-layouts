@@ -6,10 +6,7 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface ObsConfig {
-	videoInputsScene?: string;
-	gameLayoutVideoFeedScenes: (string | null)[];
-	gameplayScenes: (string | null)[];
-	intermissionScene?: string;
-	interstitialVideoScene?: string;
+export interface InterstitialVideoState {
+	isRunning: boolean;
+	returnToScene: 'INTERMISSION' | 'PREVIEW';
 }

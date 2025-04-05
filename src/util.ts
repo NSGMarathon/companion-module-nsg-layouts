@@ -8,6 +8,8 @@ import { TwitchCommercialState } from './types/replicants/twitchCommercialState'
 import { TwitchData } from './types/replicants/twitchData'
 import { ObsConfig } from './types/replicants/obsConfig'
 import { ObsState } from './types/replicants/obsState'
+import { VideoFiles } from './types/replicants/videoFiles'
+import { InterstitialVideoState } from './types/replicants/interstitialVideoState'
 
 export const LAYOUT_BUNDLE_NAME = 'nsg2-layouts'
 export const LAYOUT_FEED_COUNT = 3
@@ -27,4 +29,6 @@ export interface NsgLayoutsReplicantMap {
 	twitchData?: TwitchData
 	obsConfig?: ObsConfig
 	obsState?: ObsState
+	videoFiles?: VideoFiles
+	interstitialVideoState?: InterstitialVideoState
 }

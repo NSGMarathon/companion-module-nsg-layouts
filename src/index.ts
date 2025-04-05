@@ -71,6 +71,8 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					'twitchData',
 					'obsConfig',
 					'obsState',
+					'videoFiles',
+					'interstitialVideoState',
 				],
 			},
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
@@ -270,6 +272,12 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				this.checkFeedbacks(NsgFeedback.SceneInProgram, NsgFeedback.GameLayoutInProgram, NsgFeedback.IntermissionInProgram)
 				this.setActionDefinitions(getActionDefinitions(this.socket))
 				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
+				break
+			case 'interstitialVideoState':
+				this.checkFeedbacks(NsgFeedback.InterstitialVideoPlaying)
+				break
+			case 'videoFiles':
+				this.setActionDefinitions(getActionDefinitions(this.socket))
 				break
 		}
 	}

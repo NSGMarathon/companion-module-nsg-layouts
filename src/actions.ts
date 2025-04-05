@@ -17,6 +17,7 @@ export enum NsgAction {
 	SwitchToIntermission = 'switch_to_intermission',
 	SwitchToGameLayout = 'switch_to_game_layout',
 	SwitchToScene = 'switch_to_scene',
+	PlayInterstitialVideo = 'play_interstitial_video'
 }
 
 async function switchScene(socket: NodeCGConnector<NsgBundleMap>, sceneNameGetter: (config: ObsConfig) => string | null | undefined) {
@@ -234,6 +235,37 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 			],
 			callback: async (action) => {
 				await switchScene(socket, () => action.options.sceneName as string | undefined);
+			}
+		},
+		[NsgAction.PlayInterstitialVideo]: {
+			name: 'Play interstitial video',
+			options: [
+				{
+					id: 'file',
+					type: 'dropdown',
+					label: 'Video file',
+					default: (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? [])[0]?.path,
+					choices: (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []).map(videoFile => ({
+						id: videoFile.path,
+						label: videoFile.name
+					}))
+				}
+			],
+			callback: async (action) => {
+				const obsState = socket.replicants[LAYOUT_BUNDLE_NAME].obsState;
+				const obsConfig = socket.replicants[LAYOUT_BUNDLE_NAME].obsConfig;
+				if (
+					obsState == null
+					|| obsState.status !== 'CONNECTED'
+					|| obsState.transitionInProgress
+					|| obsConfig?.intermissionScene == null
+					|| obsConfig?.interstitialVideoScene == null
+				) return;
+				const videoFile = (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? [])
+					.find(video => video.path === action.options.file);
+				if (videoFile != null) {
+					await socket.sendMessage('videos:playInterstitial', LAYOUT_BUNDLE_NAME, { file: videoFile, returnToScene: 'INTERMISSION' });
+				}
 			}
 		}
 	}
