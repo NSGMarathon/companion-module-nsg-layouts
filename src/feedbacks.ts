@@ -6,6 +6,7 @@ import { getTeamOption } from './helpers/TalentHelper'
 import { NsgLayoutsInstance } from './index'
 import { ObsConfig } from './types/replicants/obsConfig'
 import range from 'lodash/range'
+import { DateTime } from 'luxon'
 
 export enum NsgFeedback {
 	TimerState = 'timer_state',
@@ -18,7 +19,8 @@ export enum NsgFeedback {
 	IntermissionInProgram = 'intermission_in_program',
 	GameLayoutInProgram = 'game_layout_in_program',
 	SceneInProgram = 'scene_in_program',
-	InterstitialVideoPlaying = 'interstitial_video_playing'
+	InterstitialVideoPlaying = 'interstitial_video_playing',
+	InterstitialVideoLastPlayed = 'interstitial_video_last_played'
 }
 
 function isSceneInProgram(socket: NodeCGConnector<NsgBundleMap>, sceneNameGetter: (config: ObsConfig) => string | null | undefined) {
@@ -218,6 +220,56 @@ export function getFeedbackDefinitions(
 			},
 			options: [],
 			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].interstitialVideoState?.isRunning ?? false
+		},
+		[NsgFeedback.InterstitialVideoLastPlayed]: {
+			type: 'boolean',
+			name: 'Interstitial video last played',
+			description: 'Change style if interstitial video has or has not been played for a certain period of time',
+			defaultStyle: {
+				bgcolor: combineRgb(0, 0, 0),
+				color: combineRgb(255, 255, 255)
+			},
+			options: [
+				{
+					id: 'file',
+					type: 'dropdown',
+					label: 'Video file',
+					default: (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? [])[0]?.path,
+					choices: (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []).map(videoFile => ({
+						id: videoFile.path,
+						label: videoFile.name
+					}))
+				},
+				{
+					id: 'operation',
+					type: 'dropdown',
+					label: 'Operation',
+					default: 'gt',
+					choices: [
+						{ id: 'gt', label: '>' },
+						{ id: 'lt', label: '<' }
+					]
+				},
+				{
+					id: 'amount',
+					type: 'number',
+					label: 'Amount (min.)',
+					default: 60,
+					min: 1,
+					max: 10080
+				}
+			],
+			callback: action => {
+				const videoFile = (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? [])
+					.find(video => video.path === action.options.file);
+				if (videoFile == null || videoFile.lastPlayed == null) return false;
+				const lastPlayedDiff = DateTime.fromISO(videoFile.lastPlayed).diffNow('minutes').minutes * -1;
+				if (action.options.operation === 'gt') {
+					return lastPlayedDiff > (action.options.amount as number);
+				} else {
+					return lastPlayedDiff < (action.options.amount as number);
+				}
+			}
 		}
 	}
 }

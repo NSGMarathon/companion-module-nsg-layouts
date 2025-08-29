@@ -203,9 +203,72 @@ export function getPresetDefinitions(
 		{} as CompanionPresetDefinitions
 	)
 
+	const interstitialVideoPresets = (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []).reduce((result, video) => {
+		result[`interstitial_play_${video.name.replaceAll(' ', '_')}`] = {
+			type: 'button',
+			category: 'Interstitial videos',
+			name: video.name,
+			style: {
+				text: `${video.name}\\nPlayed $(${instance.label}:interstitial_last_played_${video.name.replaceAll(' ', '_')})`,
+				size: 'auto',
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(0, 0, 0),
+			},
+			feedbacks: [
+				// Videos played less than an hour ago are de-emphasized
+				{
+					feedbackId: NsgFeedback.InterstitialVideoLastPlayed,
+					options: {
+						file: video.path,
+						operation: 'lt',
+						amount: 60,
+					},
+					style: {
+						color: combineRgb(72, 72, 72),
+					},
+				},
+				// Videos that haven't been played for over 4 hours are highlighted
+				{
+					feedbackId: NsgFeedback.InterstitialVideoLastPlayed,
+					options: {
+						file: video.path,
+						operation: 'gt',
+						amount: 60 * 4,
+					},
+					style: {
+						bgcolor: combineRgb(51, 0, 0),
+					},
+				},
+				{
+					feedbackId: NsgFeedback.InterstitialVideoPlaying,
+					options: {},
+					style: {
+						color: combineRgb(110, 110, 110),
+						bgcolor: combineRgb(36, 36, 36)
+					},
+				}
+			],
+			steps: [
+				{
+					down: [
+						{
+							actionId: NsgAction.PlayInterstitialVideo,
+							options: {
+								file: video.path,
+							},
+						},
+					],
+					up: [],
+				},
+			],
+		}
+		return result
+	}, {} as CompanionPresetDefinitions)
+
 	return {
 		...teamTimerFinishResumePresets,
 		...teamTimerResultForfeitPresets,
+		...interstitialVideoPresets,
 
 		main_timer_start_stop_resume: {
 			type: 'button',

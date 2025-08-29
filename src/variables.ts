@@ -40,5 +40,13 @@ export function getVariableDefinitions(socket: NodeCGConnector<NsgBundleMap>): C
 		])
 	)
 
+	const interstitialVideos = socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []
+	result.push(
+		...interstitialVideos.map(video => ({
+			variableId: `interstitial_last_played_${video.name.replaceAll(' ', '_')}`,
+			name: `How long ago the interstitial "${video.name}" was played`
+		}))
+	)
+
 	return result
 }

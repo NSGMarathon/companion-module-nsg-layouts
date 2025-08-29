@@ -23,6 +23,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 	private readonly timerUpdateFn: (time?: Timer) => void
 	private readonly talentNameGetter: (id: string) => string | undefined | null
 	private twitchCommercialTimerUpdateInterval: NodeJS.Timeout | undefined = undefined
+	private interstitialVideoLastPlayedUpdateInterval: NodeJS.Timeout | undefined = undefined
 	twitchCommercialsPlaying: boolean = false
 	canStartTwitchCommercials: boolean = false
 
@@ -87,11 +88,14 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 			this.assignDynamicVariablesAndFeedback(name as keyof NsgLayoutsReplicantMap)
 		})
 
+		this.interstitialVideoLastPlayedUpdateInterval = setInterval(this.updateInterstitialLastPlayedVariables.bind(this), 10000);
+
 		this.socket.start()
 	}
 
 	async destroy() {
 		this.socket.disconnect()
+		clearInterval(this.interstitialVideoLastPlayedUpdateInterval)
 	}
 
 	public async configUpdated(config: ModuleConfig): Promise<void> {
@@ -278,8 +282,23 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				break
 			case 'videoFiles':
 				this.setActionDefinitions(getActionDefinitions(this.socket))
+				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
+				this.setVariableDefinitions(getVariableDefinitions(this.socket))
+				this.updateInterstitialLastPlayedVariables();
+				this.setPresetDefinitions(getPresetDefinitions(this, this.socket))
 				break
 		}
+	}
+
+	updateInterstitialLastPlayedVariables() {
+		const interstitialVideos = this.socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []
+		this.setVariableValues(interstitialVideos.reduce((result, video) => {
+			result[`interstitial_last_played_${video.name.replaceAll(' ', '_')}`] = video.lastPlayed == null
+				? 'never'
+				: DateTime.fromISO(video.lastPlayed).toRelative({ style: 'narrow' }) ?? 'never'
+			return result
+		}, {} as Record<string, string>))
+		this.checkFeedbacks(NsgFeedback.InterstitialVideoLastPlayed)
 	}
 }
 
