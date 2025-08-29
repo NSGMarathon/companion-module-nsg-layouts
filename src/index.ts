@@ -53,7 +53,8 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				})
 			}
 		}, 500)
-		this.talentNameGetter = talentId => (this.socket.replicants[LAYOUT_BUNDLE_NAME].talent ?? []).find(talentItem => talentItem.id === talentId)?.name
+		this.talentNameGetter = (talentId) =>
+			(this.socket.replicants[LAYOUT_BUNDLE_NAME].talent ?? []).find((talentItem) => talentItem.id === talentId)?.name
 	}
 
 	public async init(config: ModuleConfig): Promise<void> {
@@ -88,7 +89,10 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 			this.assignDynamicVariablesAndFeedback(name as keyof NsgLayoutsReplicantMap)
 		})
 
-		this.interstitialVideoLastPlayedUpdateInterval = setInterval(this.updateInterstitialLastPlayedVariables.bind(this), 10000);
+		this.interstitialVideoLastPlayedUpdateInterval = setInterval(
+			this.updateInterstitialLastPlayedVariables.bind(this),
+			10000
+		)
 
 		this.socket.start()
 	}
@@ -228,10 +232,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 						nextSpeedrun?.estimate == null
 							? undefined
 							: Duration.fromISO(nextSpeedrun.estimate).shiftTo('hours', 'minutes', 'seconds').toFormat('h:mm:ss'),
-					next_run_players: formatScheduleItemTalentList(
-						nextSpeedrun,
-						this.talentNameGetter
-					),
+					next_run_players: formatScheduleItemTalentList(nextSpeedrun, this.talentNameGetter),
 				})
 				break
 			}
@@ -273,7 +274,11 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				break
 			case 'obsConfig':
 			case 'obsState':
-				this.checkFeedbacks(NsgFeedback.SceneInProgram, NsgFeedback.GameLayoutInProgram, NsgFeedback.IntermissionInProgram)
+				this.checkFeedbacks(
+					NsgFeedback.SceneInProgram,
+					NsgFeedback.GameLayoutInProgram,
+					NsgFeedback.IntermissionInProgram
+				)
 				this.setActionDefinitions(getActionDefinitions(this.socket))
 				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
 				break
@@ -284,7 +289,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				this.setActionDefinitions(getActionDefinitions(this.socket))
 				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
 				this.setVariableDefinitions(getVariableDefinitions(this.socket))
-				this.updateInterstitialLastPlayedVariables();
+				this.updateInterstitialLastPlayedVariables()
 				this.setPresetDefinitions(getPresetDefinitions(this, this.socket))
 				break
 		}
@@ -292,12 +297,15 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 
 	updateInterstitialLastPlayedVariables() {
 		const interstitialVideos = this.socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []
-		this.setVariableValues(interstitialVideos.reduce((result, video) => {
-			result[`interstitial_last_played_${video.name.replaceAll(' ', '_')}`] = video.lastPlayed == null
-				? 'never'
-				: DateTime.fromISO(video.lastPlayed).toRelative({ style: 'narrow' }) ?? 'never'
-			return result
-		}, {} as Record<string, string>))
+		this.setVariableValues(
+			interstitialVideos.reduce((result, video) => {
+				result[`interstitial_last_played_${video.name.replaceAll(' ', '_')}`] =
+					video.lastPlayed == null
+						? 'never'
+						: DateTime.fromISO(video.lastPlayed).toRelative({ style: 'narrow' }) ?? 'never'
+				return result
+			}, {} as Record<string, string>)
+		)
 		this.checkFeedbacks(NsgFeedback.InterstitialVideoLastPlayed)
 	}
 }

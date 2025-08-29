@@ -3,20 +3,24 @@ import { CompanionInputFieldDropdown } from '@companion-module/base/dist/module-
 import { Speedrun } from '../types/replicants/schedule'
 import { ScheduleItem } from '../types/ScheduleHelpers'
 
-export function prettyPrintTalentIdList(talentIds: { id: string }[], talentNameGetter: (id: string) => string | undefined | null, maxItems = 4): string {
-	const uniqueTalentIds = Array.from(new Set(talentIds.map(talentId => talentId.id)));
+export function prettyPrintTalentIdList(
+	talentIds: { id: string }[],
+	talentNameGetter: (id: string) => string | undefined | null,
+	maxItems = 4
+): string {
+	const uniqueTalentIds = Array.from(new Set(talentIds.map((talentId) => talentId.id)))
 	const nameList = uniqueTalentIds
-		.map(talentId => talentNameGetter(talentId))
-		.filter(talentName => talentName != null);
+		.map((talentId) => talentNameGetter(talentId))
+		.filter((talentName) => talentName != null)
 	if (nameList.length === 0) {
-		return '(Somebody?)';
+		return '(Somebody?)'
 	}
-	const slicedNameList = nameList.slice(0, maxItems);
+	const slicedNameList = nameList.slice(0, maxItems)
 	if (uniqueTalentIds.length !== slicedNameList.length) {
-		const overflowCount = uniqueTalentIds.length - slicedNameList.length;
-		slicedNameList.push(overflowCount === 1 ? '1 other' : `${overflowCount} others`);
+		const overflowCount = uniqueTalentIds.length - slicedNameList.length
+		slicedNameList.push(overflowCount === 1 ? '1 other' : `${overflowCount} others`)
 	}
-	return prettyPrintList(slicedNameList);
+	return prettyPrintList(slicedNameList)
 }
 
 export function getTeamOption(teams: Speedrun['teams']): CompanionInputFieldDropdown {
@@ -29,17 +33,25 @@ export function getTeamOption(teams: Speedrun['teams']): CompanionInputFieldDrop
 	}
 }
 
-export function formatScheduleItemTalentList(scheduleItem: ScheduleItem, talentNameGetter: (id: string) => string | undefined | null): string {
+export function formatScheduleItemTalentList(
+	scheduleItem: ScheduleItem,
+	talentNameGetter: (id: string) => string | undefined | null
+): string {
 	if (scheduleItem.type === 'SPEEDRUN') {
-		const maxTalentItemsPerTeam = scheduleItem.teams.length > 1 ? 3 : 6;
-		return scheduleItem.teams.reduce((result: string, team: Speedrun['teams'][number], index: number, array: Speedrun['teams']) => {
-			result += isBlank(team.name) ? prettyPrintTalentIdList(team.playerIds, talentNameGetter, maxTalentItemsPerTeam) : team.name;
-			if (index !== array.length - 1) {
-				result += ' vs. ';
-			}
-			return result;
-		}, '');
+		const maxTalentItemsPerTeam = scheduleItem.teams.length > 1 ? 3 : 6
+		return scheduleItem.teams.reduce(
+			(result: string, team: Speedrun['teams'][number], index: number, array: Speedrun['teams']) => {
+				result += isBlank(team.name)
+					? prettyPrintTalentIdList(team.playerIds, talentNameGetter, maxTalentItemsPerTeam)
+					: team.name
+				if (index !== array.length - 1) {
+					result += ' vs. '
+				}
+				return result
+			},
+			''
+		)
 	} else {
-		return prettyPrintTalentIdList(scheduleItem.talentIds, talentNameGetter);
+		return prettyPrintTalentIdList(scheduleItem.talentIds, talentNameGetter)
 	}
 }

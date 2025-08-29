@@ -20,15 +20,18 @@ export enum NsgFeedback {
 	GameLayoutInProgram = 'game_layout_in_program',
 	SceneInProgram = 'scene_in_program',
 	InterstitialVideoPlaying = 'interstitial_video_playing',
-	InterstitialVideoLastPlayed = 'interstitial_video_last_played'
+	InterstitialVideoLastPlayed = 'interstitial_video_last_played',
 }
 
-function isSceneInProgram(socket: NodeCGConnector<NsgBundleMap>, sceneNameGetter: (config: ObsConfig) => string | null | undefined) {
-	const obsState = socket.replicants[LAYOUT_BUNDLE_NAME].obsState;
+function isSceneInProgram(
+	socket: NodeCGConnector<NsgBundleMap>,
+	sceneNameGetter: (config: ObsConfig) => string | null | undefined
+) {
+	const obsState = socket.replicants[LAYOUT_BUNDLE_NAME].obsState
 	const obsConfig = socket.replicants[LAYOUT_BUNDLE_NAME].obsConfig
-	if (obsConfig == null || obsState == null) return false;
-	const sceneName = sceneNameGetter(obsConfig);
-	return obsState.currentScene != null && sceneName != null && obsState.currentScene === sceneName;
+	if (obsConfig == null || obsState == null) return false
+	const sceneName = sceneNameGetter(obsConfig)
+	return obsState.currentScene != null && sceneName != null && obsState.currentScene === sceneName
 }
 
 export function getFeedbackDefinitions(
@@ -165,7 +168,7 @@ export function getFeedbackDefinitions(
 				color: combineRgb(255, 255, 255),
 			},
 			options: [],
-			callback: () => isSceneInProgram(socket, config => config.intermissionScene)
+			callback: () => isSceneInProgram(socket, (config) => config.intermissionScene),
 		},
 		[NsgFeedback.GameLayoutInProgram]: {
 			type: 'boolean',
@@ -181,13 +184,14 @@ export function getFeedbackDefinitions(
 					type: 'dropdown',
 					label: 'Feed',
 					default: 0,
-					choices: range(LAYOUT_FEED_COUNT).map(i => ({
+					choices: range(LAYOUT_FEED_COUNT).map((i) => ({
 						id: i,
-						label: i === 0 ? 'Main Feed' : `Feed ${i + 1}`
-					}))
-				}
+						label: i === 0 ? 'Main Feed' : `Feed ${i + 1}`,
+					})),
+				},
 			],
-			callback: (feedback) => isSceneInProgram(socket, config => config.gameplayScenes[feedback.options.feedIndex as number])
+			callback: (feedback) =>
+				isSceneInProgram(socket, (config) => config.gameplayScenes[feedback.options.feedIndex as number]),
 		},
 		[NsgFeedback.SceneInProgram]: {
 			type: 'boolean',
@@ -203,13 +207,13 @@ export function getFeedbackDefinitions(
 					type: 'dropdown',
 					label: 'Scene name',
 					default: socket.replicants[LAYOUT_BUNDLE_NAME].obsState?.scenes?.[0] ?? '',
-					choices: (socket.replicants[LAYOUT_BUNDLE_NAME].obsState?.scenes ?? []).map(sceneName => ({
+					choices: (socket.replicants[LAYOUT_BUNDLE_NAME].obsState?.scenes ?? []).map((sceneName) => ({
 						id: sceneName,
-						label: sceneName
-					}))
-				}
+						label: sceneName,
+					})),
+				},
 			],
-			callback: (feedback) => isSceneInProgram(socket, () => feedback.options.sceneName as string | undefined)
+			callback: (feedback) => isSceneInProgram(socket, () => feedback.options.sceneName as string | undefined),
 		},
 		[NsgFeedback.InterstitialVideoPlaying]: {
 			type: 'boolean',
@@ -219,7 +223,7 @@ export function getFeedbackDefinitions(
 				color: combineRgb(0, 0, 0),
 			},
 			options: [],
-			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].interstitialVideoState?.isRunning ?? false
+			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].interstitialVideoState?.isRunning ?? false,
 		},
 		[NsgFeedback.InterstitialVideoLastPlayed]: {
 			type: 'boolean',
@@ -227,7 +231,7 @@ export function getFeedbackDefinitions(
 			description: 'Change style if interstitial video has or has not been played for a certain period of time',
 			defaultStyle: {
 				bgcolor: combineRgb(0, 0, 0),
-				color: combineRgb(255, 255, 255)
+				color: combineRgb(255, 255, 255),
 			},
 			options: [
 				{
@@ -235,10 +239,10 @@ export function getFeedbackDefinitions(
 					type: 'dropdown',
 					label: 'Video file',
 					default: (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? [])[0]?.path,
-					choices: (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []).map(videoFile => ({
+					choices: (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []).map((videoFile) => ({
 						id: videoFile.path,
-						label: videoFile.name
-					}))
+						label: videoFile.name,
+					})),
 				},
 				{
 					id: 'operation',
@@ -247,8 +251,8 @@ export function getFeedbackDefinitions(
 					default: 'gt',
 					choices: [
 						{ id: 'gt', label: '>' },
-						{ id: 'lt', label: '<' }
-					]
+						{ id: 'lt', label: '<' },
+					],
 				},
 				{
 					id: 'amount',
@@ -256,20 +260,21 @@ export function getFeedbackDefinitions(
 					label: 'Amount (min.)',
 					default: 60,
 					min: 1,
-					max: 10080
-				}
+					max: 10080,
+				},
 			],
-			callback: action => {
-				const videoFile = (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? [])
-					.find(video => video.path === action.options.file);
-				if (videoFile == null || videoFile.lastPlayed == null) return false;
-				const lastPlayedDiff = DateTime.fromISO(videoFile.lastPlayed).diffNow('minutes').minutes * -1;
+			callback: (action) => {
+				const videoFile = (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []).find(
+					(video) => video.path === action.options.file
+				)
+				if (videoFile == null || videoFile.lastPlayed == null) return false
+				const lastPlayedDiff = DateTime.fromISO(videoFile.lastPlayed).diffNow('minutes').minutes * -1
 				if (action.options.operation === 'gt') {
-					return lastPlayedDiff > (action.options.amount as number);
+					return lastPlayedDiff > (action.options.amount as number)
 				} else {
-					return lastPlayedDiff < (action.options.amount as number);
+					return lastPlayedDiff < (action.options.amount as number)
 				}
-			}
-		}
+			},
+		},
 	}
 }
