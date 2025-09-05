@@ -2,7 +2,7 @@ import { combineRgb, CompanionPresetDefinitions, CompanionPresetFeedback } from 
 import { NsgFeedback } from './feedbacks'
 import { NsgAction } from './actions'
 import { NodeCGConnector } from './NodeCGConnector'
-import { LAYOUT_BUNDLE_NAME, NsgBundleMap } from './util'
+import { buildTodoListItemOptionId, LAYOUT_BUNDLE_NAME, NsgBundleMap } from './util'
 import { NsgLayoutsInstance } from './index'
 
 export function getPresetDefinitions(
@@ -271,10 +271,55 @@ export function getPresetDefinitions(
 		{} as CompanionPresetDefinitions
 	)
 
+	const todoListItemPresets = socket.replicants[LAYOUT_BUNDLE_NAME].todoList?.techSetup.reduce((result, category) => {
+		category.items.forEach((item) => {
+			result[`todo_item_${category.name}_${item.name}`] = {
+				type: 'button',
+				category: 'Todo list items',
+				name: `${category.name} - ${item.name}`,
+				style: {
+					text: item.name,
+					size: 'auto',
+					color: combineRgb(255, 255, 255),
+					bgcolor: combineRgb(0, 0, 0),
+				},
+				feedbacks: [
+					{
+						feedbackId: NsgFeedback.TodoItemCompleted,
+						options: {
+							todoItem: buildTodoListItemOptionId(category.name, item.name),
+						},
+						style: {
+							color: combineRgb(0, 0, 0),
+							bgcolor: combineRgb(0, 255, 0),
+						},
+					},
+				],
+				steps: [
+					{
+						down: [
+							{
+								actionId: NsgAction.SetTodoItemCompleted,
+								options: {
+									todoItem: buildTodoListItemOptionId(category.name, item.name),
+									behavior: 'toggle',
+								},
+							},
+						],
+						up: [],
+					},
+				],
+			}
+		})
+
+		return result
+	}, {} as CompanionPresetDefinitions)
+
 	return {
 		...teamTimerFinishResumePresets,
 		...teamTimerResultForfeitPresets,
 		...interstitialVideoPresets,
+		...todoListItemPresets,
 
 		main_timer_start_stop_resume: {
 			type: 'button',

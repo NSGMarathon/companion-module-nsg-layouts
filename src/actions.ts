@@ -1,6 +1,12 @@
 import { CompanionActionDefinitions } from '@companion-module/base'
 import { NodeCGConnector } from './NodeCGConnector'
-import { LAYOUT_BUNDLE_NAME, LAYOUT_FEED_COUNT, NsgBundleMap } from './util'
+import {
+	getTodoListItemOptions,
+	LAYOUT_BUNDLE_NAME,
+	LAYOUT_FEED_COUNT,
+	NsgBundleMap,
+	parseTodoListItemOptionId,
+} from './util'
 import { getTeamOption } from './helpers/TalentHelper'
 import { ObsConfig } from './types/replicants/obsConfig'
 import range from 'lodash/range'
@@ -18,6 +24,7 @@ export enum NsgAction {
 	SwitchToGameLayout = 'switch_to_game_layout',
 	SwitchToScene = 'switch_to_scene',
 	PlayInterstitialVideo = 'play_interstitial_video',
+	SetTodoItemCompleted = 'set_todo_item_completed',
 }
 
 async function switchScene(
@@ -272,6 +279,46 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 					await socket.sendMessage('videos:playInterstitial', LAYOUT_BUNDLE_NAME, {
 						file: videoFile,
 						returnToScene: 'INTERMISSION',
+					})
+				}
+			},
+		},
+		[NsgAction.SetTodoItemCompleted]: {
+			name: 'Set whether todo item is completed',
+			options: [
+				{
+					id: 'behavior',
+					type: 'dropdown',
+					label: 'Completed/Not Completed/Toggle',
+					default: 'toggle',
+					choices: [
+						{ id: 'toggle', label: 'Toggle' },
+						{ id: 'completed', label: 'Completed' },
+						{ id: 'notCompleted', label: 'Not Completed' },
+					],
+				},
+				getTodoListItemOptions(socket),
+			],
+			callback: async (action) => {
+				const parsedTodoItem = parseTodoListItemOptionId(action.options.todoItem as string)
+
+				if (action.options.behavior === 'toggle') {
+					const todoItem = socket.replicants[LAYOUT_BUNDLE_NAME].todoList?.techSetup
+						?.find((category) => category.name === parsedTodoItem.categoryName)
+						?.items.find((item) => item.name === parsedTodoItem.itemName)
+
+					if (todoItem != null) {
+						await socket.sendMessage('todo:setCompleted', LAYOUT_BUNDLE_NAME, {
+							categoryName: parsedTodoItem.categoryName,
+							listItemName: todoItem.name,
+							completed: !todoItem.completed,
+						})
+					}
+				} else {
+					await socket.sendMessage('todo:setCompleted', LAYOUT_BUNDLE_NAME, {
+						categoryName: parsedTodoItem.categoryName,
+						listItemName: parsedTodoItem.itemName,
+						completed: action.options.behavior === 'completed',
 					})
 				}
 			},

@@ -24,6 +24,7 @@ const ARRAY_MUTATOR_METHODS = ['copyWithin', 'fill', 'pop', 'push', 'reverse', '
 
 type NodeCGConnectorEventMap = {
 	replicantUpdate: (name: string, bundleName: string) => void
+	connect: () => void
 }
 
 type ReplicantNameMap<B extends BundleMap> = { [Key in keyof B]: Array<keyof B[Key]> }
@@ -228,6 +229,7 @@ export class NodeCGConnector<
 			)
 		} else {
 			this.instance.updateStatus(InstanceStatus.Ok)
+			this.emit('connect')
 		}
 	}
 

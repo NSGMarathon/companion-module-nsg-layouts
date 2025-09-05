@@ -1,5 +1,12 @@
 import { combineRgb, CompanionFeedbackDefinitions } from '@companion-module/base'
-import { LAYOUT_BUNDLE_NAME, LAYOUT_FEED_COUNT, NsgBundleMap } from './util'
+import {
+	getTodoListCategoryOptions,
+	getTodoListItemOptions,
+	LAYOUT_BUNDLE_NAME,
+	LAYOUT_FEED_COUNT,
+	NsgBundleMap,
+	parseTodoListItemOptionId,
+} from './util'
 import { NodeCGConnector } from './NodeCGConnector'
 import { CompanionInputFieldDropdown } from '@companion-module/base/dist/module-api/input'
 import { getTeamOption } from './helpers/TalentHelper'
@@ -21,6 +28,9 @@ export enum NsgFeedback {
 	SceneInProgram = 'scene_in_program',
 	InterstitialVideoPlaying = 'interstitial_video_playing',
 	InterstitialVideoLastPlayed = 'interstitial_video_last_played',
+	AllTodoItemsCompleted = 'all_todo_items_completed',
+	TodoCategoryCompleted = 'todo_category_completed',
+	TodoItemCompleted = 'todo_item_completed',
 }
 
 function isSceneInProgram(
@@ -52,6 +62,8 @@ export function getFeedbackDefinitions(
 	}
 	const teams = socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun?.teams ?? []
 	const teamOption = getTeamOption(teams)
+	const todoItemOptions = getTodoListItemOptions(socket)
+	const todoCategoryOptions = getTodoListCategoryOptions(socket)
 
 	return {
 		...socket.getFeedbacks(),
@@ -274,6 +286,59 @@ export function getFeedbackDefinitions(
 				} else {
 					return lastPlayedDiff < (action.options.amount as number)
 				}
+			},
+		},
+		[NsgFeedback.AllTodoItemsCompleted]: {
+			type: 'boolean',
+			name: 'All todo list items completed',
+			description: 'Change style if tech setup has been completed',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [],
+			callback: () => {
+				return (
+					socket.replicants[LAYOUT_BUNDLE_NAME].todoList?.techSetup.every((category) =>
+						category.items.every((item) => item.completed)
+					) ?? false
+				)
+			},
+		},
+		[NsgFeedback.TodoCategoryCompleted]: {
+			type: 'boolean',
+			name: 'Todo list category completed',
+			description: 'Change style if todo list category is completed',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [todoCategoryOptions],
+			callback: (action) => {
+				return (
+					socket.replicants[LAYOUT_BUNDLE_NAME].todoList?.techSetup
+						.find((category) => category.name === action.options.todoCategory)
+						?.items.every((item) => item.completed) ?? false
+				)
+			},
+		},
+		[NsgFeedback.TodoItemCompleted]: {
+			type: 'boolean',
+			name: 'Todo list item completed',
+			description: 'Change style if todo list item is completed',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [todoItemOptions],
+			callback: (action) => {
+				const todoItem = parseTodoListItemOptionId(action.options.todoItem as string)
+
+				return (
+					socket.replicants[LAYOUT_BUNDLE_NAME].todoList?.techSetup
+						.find((category) => category.name === todoItem.categoryName)
+						?.items.find((item) => item.name === todoItem.itemName)?.completed ?? false
+				)
 			},
 		},
 	}

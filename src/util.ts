@@ -10,6 +10,9 @@ import { ObsConfig } from './types/replicants/obsConfig'
 import { ObsState } from './types/replicants/obsState'
 import { VideoFiles } from './types/replicants/videoFiles'
 import { InterstitialVideoState } from './types/replicants/interstitialVideoState'
+import { TodoList } from './types/replicants/todoList'
+import { NodeCGConnector } from './NodeCGConnector'
+import { CompanionInputFieldDropdown, DropdownChoice } from '@companion-module/base/dist/module-api/input'
 
 export const LAYOUT_BUNDLE_NAME = 'nsg2-layouts'
 export const LAYOUT_FEED_COUNT = 3
@@ -31,4 +34,56 @@ export interface NsgLayoutsReplicantMap {
 	obsState?: ObsState
 	videoFiles?: VideoFiles
 	interstitialVideoState?: InterstitialVideoState
+	todoList?: TodoList
+}
+
+export function getTodoListCategoryOptions(socket: NodeCGConnector<NsgBundleMap>): CompanionInputFieldDropdown {
+	const categories = socket.replicants[LAYOUT_BUNDLE_NAME].todoList?.techSetup ?? []
+
+	return {
+		id: 'todoCategory',
+		type: 'dropdown',
+		label: 'Category',
+		default: categories.length === 0 ? '' : categories[0].name,
+		choices: categories.map((category) => ({
+			id: category.name,
+			label: category.name,
+		})),
+	}
+}
+
+export function getTodoListItemOptions(socket: NodeCGConnector<NsgBundleMap>): CompanionInputFieldDropdown {
+	const categories = socket.replicants[LAYOUT_BUNDLE_NAME].todoList?.techSetup ?? []
+
+	return {
+		id: 'todoItem',
+		type: 'dropdown',
+		label: 'Item',
+		default:
+			categories.length === 0 ? '' : categories.find((category) => category.items.length > 0)?.items[0].name ?? '',
+		choices: categories.reduce((result, category) => {
+			return result.concat(
+				category.items.map((item) => ({
+					id: buildTodoListItemOptionId(category.name, item.name),
+					label: `${category.name} - ${item.name}`,
+				}))
+			)
+		}, [] as DropdownChoice[]),
+	}
+}
+
+export function buildTodoListItemOptionId(categoryName: string, itemName: string): string {
+	return `${categoryName}\n${itemName}`
+}
+
+export function parseTodoListItemOptionId(id: string): { categoryName: string; itemName: string } {
+	const splitId = id.split('\n')
+	if (splitId.length !== 2) {
+		throw new Error(`Error parsing todo list item option id "${id}"`)
+	}
+
+	return {
+		categoryName: splitId[0],
+		itemName: splitId[1],
+	}
 }

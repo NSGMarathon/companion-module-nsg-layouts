@@ -75,6 +75,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					'obsState',
 					'videoFiles',
 					'interstitialVideoState',
+					'todoList',
 				],
 			},
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
@@ -87,6 +88,12 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 
 		this.socket.on('replicantUpdate', (name) => {
 			this.assignDynamicVariablesAndFeedback(name as keyof NsgLayoutsReplicantMap)
+		})
+
+		this.socket.on('connect', () => {
+			this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
+			this.setActionDefinitions(getActionDefinitions(this.socket))
+			this.setPresetDefinitions(getPresetDefinitions(this, this.socket))
 		})
 
 		this.interstitialVideoLastPlayedUpdateInterval = setInterval(
@@ -292,6 +299,12 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				this.updateInterstitialLastPlayedVariables()
 				this.setPresetDefinitions(getPresetDefinitions(this, this.socket))
 				break
+			case 'todoList':
+				this.checkFeedbacks(
+					NsgFeedback.AllTodoItemsCompleted,
+					NsgFeedback.TodoCategoryCompleted,
+					NsgFeedback.TodoItemCompleted
+				)
 		}
 	}
 
