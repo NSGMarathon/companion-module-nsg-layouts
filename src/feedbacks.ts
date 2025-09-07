@@ -6,6 +6,8 @@ import {
 	LAYOUT_FEED_COUNT,
 	NsgBundleMap,
 	parseTodoListItemOptionId,
+	stageDisplayMessageColorOption,
+	stageDisplayMessageModeOption,
 } from './util'
 import { NodeCGConnector } from './NodeCGConnector'
 import { CompanionInputFieldDropdown } from '@companion-module/base/dist/module-api/input'
@@ -31,6 +33,11 @@ export enum NsgFeedback {
 	AllTodoItemsCompleted = 'all_todo_items_completed',
 	TodoCategoryCompleted = 'todo_category_completed',
 	TodoItemCompleted = 'todo_item_completed',
+	StageDisplayMessageVisible = 'stage_display_message_visible',
+	StageDisplayMessageText = 'stage_display_message_text',
+	StageDisplayMessageMode = 'stage_display_message_mode',
+	StageDisplayMessageColor = 'stage_display_message_color',
+	StageDisplayMode = 'stage_display_mode'
 }
 
 function isSceneInProgram(
@@ -341,5 +348,77 @@ export function getFeedbackDefinitions(
 				)
 			},
 		},
+		[NsgFeedback.StageDisplayMessageVisible]: {
+			type: 'boolean',
+			name: 'Stage display message visible',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [],
+			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.visible ?? false
+		},
+		[NsgFeedback.StageDisplayMessageText]: {
+			type: 'boolean',
+			name: 'Stage display message text equals',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [
+				{
+					id: 'text',
+					type: 'textinput',
+					label: 'Text',
+					default: ''
+				}
+			],
+			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.text?.toLowerCase() === (action.options.text as string).toLowerCase()
+		},
+		[NsgFeedback.StageDisplayMessageMode]: {
+			type: 'boolean',
+			name: 'Stage display message mode equals',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [
+				stageDisplayMessageModeOption
+			],
+			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.mode === action.options.mode
+		},
+		[NsgFeedback.StageDisplayMessageColor]: {
+			type: 'boolean',
+			name: 'Stage display message color equals',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [
+				stageDisplayMessageColorOption
+			],
+			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.color === action.options.color
+		},
+		[NsgFeedback.StageDisplayMode]: {
+			type: 'boolean',
+			name: 'Stage display mode equals',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [
+				{
+					id: 'mode',
+					label: 'Mode',
+					type: 'dropdown',
+					default: 'PREVIEW',
+					choices: [
+						{ id: 'PREVIEW', label: 'Preview' },
+						{ id: 'PROGRAM', label: 'Program' },
+					]
+				}
+			],
+			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.mode === action.options.mode
+		}
 	}
 }

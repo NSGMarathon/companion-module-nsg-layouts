@@ -6,6 +6,8 @@ import {
 	LAYOUT_FEED_COUNT,
 	NsgBundleMap,
 	parseTodoListItemOptionId,
+	stageDisplayMessageColorOption,
+	stageDisplayMessageModeOption,
 } from './util'
 import { getTeamOption } from './helpers/TalentHelper'
 import { ObsConfig } from './types/replicants/obsConfig'
@@ -25,6 +27,11 @@ export enum NsgAction {
 	SwitchToScene = 'switch_to_scene',
 	PlayInterstitialVideo = 'play_interstitial_video',
 	SetTodoItemCompleted = 'set_todo_item_completed',
+	SetStageDisplayMessageVisible = 'set_stage_display_message_visible',
+	SetStageDisplayMessageText = 'set_stage_display_message_text',
+	SetStageDisplayMessageMode = 'set_stage_display_message_mode',
+	SetStageDisplayMessageColor = 'set_stage_display_message_color',
+	SetStageDisplayMode = 'set_stage_display_mode',
 }
 
 async function switchScene(
@@ -322,6 +329,129 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 					})
 				}
 			},
+		},
+		[NsgAction.SetStageDisplayMessageVisible]: {
+			name: 'Set stage display message visibility',
+			options: [
+				{
+					id: 'behavior',
+					type: 'dropdown',
+					label: 'Visible/Not Visible/Toggle',
+					default: 'toggle',
+					choices: [
+						{ id: 'toggle', label: 'Toggle' },
+						{ id: 'true', label: 'Visible' },
+						{ id: 'false', label: 'Not Visible' },
+					],
+				}
+			],
+			callback: (action) => {
+				const newValue = action.options.behavior === 'toggle'
+					? !socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.visible
+					: action.options.behavior === 'true'
+
+				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
+					{
+						path: '/message',
+						method: 'update',
+						args: {
+							prop: 'visible',
+							newValue
+						},
+					},
+				])
+			}
+		},
+		[NsgAction.SetStageDisplayMessageMode]: {
+			name: 'Set stage display message mode',
+			options: [
+				stageDisplayMessageModeOption
+			],
+			callback: (action) => {
+				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
+					{
+						path: '/message',
+						method: 'update',
+						args: {
+							prop: 'mode',
+							newValue: action.options.mode
+						},
+					},
+				])
+			}
+		},
+		[NsgAction.SetStageDisplayMessageColor]: {
+			name: 'Set stage display message color',
+			options: [
+				stageDisplayMessageColorOption
+			],
+			callback: (action) => {
+				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
+					{
+						path: '/message',
+						method: 'update',
+						args: {
+							prop: 'color',
+							newValue: action.options.color
+						},
+					},
+				])
+			}
+		},
+		[NsgAction.SetStageDisplayMessageText]: {
+			name: 'Set stage display message text',
+			options: [
+				{
+					id: 'text',
+					type: 'textinput',
+					label: 'Text',
+					default: '',
+					required: true
+				}
+			],
+			callback: (action) => {
+				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
+					{
+						path: '/message',
+						method: 'update',
+						args: {
+							prop: 'text',
+							newValue: action.options.text
+						},
+					},
+				])
+			}
+		},
+		[NsgAction.SetStageDisplayMode]: {
+			name: 'Set stage display mode',
+			options: [
+				{
+					id: 'mode',
+					label: 'Mode',
+					type: 'dropdown',
+					default: 'toggle',
+					choices: [
+						{ id: 'toggle', label: 'Toggle' },
+						{ id: 'PREVIEW', label: 'Preview' },
+						{ id: 'PROGRAM', label: 'Program' },
+					]
+				}
+			],
+			callback: (action) => {
+				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
+					{
+						path: '/',
+						method: 'update',
+						args: {
+							prop: 'mode',
+							newValue: action.options.mode === 'toggle'
+								? socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.mode === 'PROGRAM'
+									? 'PREVIEW' : 'PROGRAM'
+								: action.options.mode
+						},
+					},
+				])
+			}
 		},
 	}
 }

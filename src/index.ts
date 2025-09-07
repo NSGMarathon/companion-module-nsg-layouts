@@ -76,6 +76,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					'videoFiles',
 					'interstitialVideoState',
 					'todoList',
+					'stageDisplayState'
 				],
 			},
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
@@ -304,6 +305,15 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					NsgFeedback.AllTodoItemsCompleted,
 					NsgFeedback.TodoCategoryCompleted,
 					NsgFeedback.TodoItemCompleted
+				)
+				break
+			case 'stageDisplayState':
+				this.checkFeedbacks(
+					NsgFeedback.StageDisplayMessageVisible,
+					NsgFeedback.StageDisplayMessageText,
+					NsgFeedback.StageDisplayMessageMode,
+					NsgFeedback.StageDisplayMessageColor,
+					NsgFeedback.StageDisplayMode
 				)
 		}
 	}

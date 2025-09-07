@@ -13,6 +13,7 @@ import { InterstitialVideoState } from './types/replicants/interstitialVideoStat
 import { TodoList } from './types/replicants/todoList'
 import { NodeCGConnector } from './NodeCGConnector'
 import { CompanionInputFieldDropdown, DropdownChoice } from '@companion-module/base/dist/module-api/input'
+import { StageDisplayState } from './types/replicants/stageDisplayState'
 
 export const LAYOUT_BUNDLE_NAME = 'nsg2-layouts'
 export const LAYOUT_FEED_COUNT = 3
@@ -35,6 +36,7 @@ export interface NsgLayoutsReplicantMap {
 	videoFiles?: VideoFiles
 	interstitialVideoState?: InterstitialVideoState
 	todoList?: TodoList
+	stageDisplayState?: StageDisplayState
 }
 
 export function getTodoListCategoryOptions(socket: NodeCGConnector<NsgBundleMap>): CompanionInputFieldDropdown {
@@ -86,4 +88,27 @@ export function parseTodoListItemOptionId(id: string): { categoryName: string; i
 		categoryName: splitId[0],
 		itemName: splitId[1],
 	}
+}
+
+export const stageDisplayMessageModeOption: CompanionInputFieldDropdown = {
+	id: 'mode',
+	label: 'Mode',
+	type: 'dropdown',
+	default: 'QUICK',
+	choices: [
+		{ id: 'QUICK', label: 'Quick' },
+		{ id: 'GENTLE', label: 'Gentle' }
+	]
+}
+
+export const stageDisplayMessageColorOption: CompanionInputFieldDropdown = {
+	id: 'color',
+	label: 'Color',
+	type: 'dropdown',
+	default: 'YELLOW',
+	choices: [
+		{ id: 'YELLOW', label: 'Yellow' },
+		{ id: 'RED', label: 'Red' },
+		{ id: 'GRAY', label: 'Gray' }
+	]
 }
