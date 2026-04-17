@@ -1,5 +1,6 @@
 import { combineRgb, CompanionFeedbackDefinitions } from '@companion-module/base'
 import {
+	getFeudAnswerOption,
 	getTodoListCategoryOptions,
 	getTodoListItemOptions,
 	LAYOUT_BUNDLE_NAME,
@@ -37,7 +38,8 @@ export enum NsgFeedback {
 	StageDisplayMessageText = 'stage_display_message_text',
 	StageDisplayMessageMode = 'stage_display_message_mode',
 	StageDisplayMessageColor = 'stage_display_message_color',
-	StageDisplayMode = 'stage_display_mode'
+	StageDisplayMode = 'stage_display_mode',
+	FeudAnswerGuessed = 'feud_answer_guessed',
 }
 
 function isSceneInProgram(
@@ -419,6 +421,20 @@ export function getFeedbackDefinitions(
 				}
 			],
 			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.mode === action.options.mode
+		},
+		[NsgFeedback.FeudAnswerGuessed]: {
+			type: 'boolean',
+			name: 'Feud answer guessed',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [
+				getFeudAnswerOption(socket),
+			],
+			callback: (action) => {
+				return (socket.replicants[LAYOUT_BUNDLE_NAME].feudBoard?.answers ?? [])[action.options.answer as number]?.guessed ?? false
+			}
 		}
 	}
 }

@@ -24,7 +24,18 @@ export function getVariableDefinitions(socket: NodeCGConnector<NsgBundleMap>): C
 		{ variableId: 'donation_total_raw', name: 'Total amount donated as an unformatted number' },
 		{ variableId: 'twitch_commercial_retry_time', name: 'Time until a new Twitch commercial may be played' },
 		{ variableId: 'twitch_commercial_end_time', name: 'Time until the current Twitch commercial ends' },
+		{ variableId: 'feud_team_a_name', name: 'Name of the first Feud team' },
+		{ variableId: 'feud_team_a_score', name: 'Score of the first Feud team' },
+		{ variableId: 'feud_team_b_name', name: 'Name of the second Feud team' },
+		{ variableId: 'feud_team_b_score', name: 'Score of the second Feud team' },
 	]
+
+	for (let i = 1; i <= 8; i++) {
+		result.push(
+			{ variableId: `feud_answer_${i}`, name: `Feud answer #${i}` },
+			{ variableId: `feud_answer_value_${i}`, name: `Value of Feud answer #${i}` },
+		)
+	}
 
 	const teams = socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun?.teams ?? []
 	result.push(

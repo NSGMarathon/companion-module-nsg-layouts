@@ -14,6 +14,9 @@ import { TodoList } from './types/replicants/todoList'
 import { NodeCGConnector } from './NodeCGConnector'
 import { CompanionInputFieldDropdown, DropdownChoice } from '@companion-module/base/dist/module-api/input'
 import { StageDisplayState } from './types/replicants/stageDisplayState'
+import { FeudBoard } from './types/replicants/feudBoard'
+import { FeudState } from './types/replicants/feudState'
+import { FeudTeamInfo } from './types/replicants/feudTeamInfo'
 
 export const LAYOUT_BUNDLE_NAME = 'nsg2-layouts'
 export const LAYOUT_FEED_COUNT = 3
@@ -37,6 +40,9 @@ export interface NsgLayoutsReplicantMap {
 	interstitialVideoState?: InterstitialVideoState
 	todoList?: TodoList
 	stageDisplayState?: StageDisplayState
+	feudBoard?: FeudBoard
+	feudState?: FeudState
+	feudTeamInfo?: FeudTeamInfo
 }
 
 export function getTodoListCategoryOptions(socket: NodeCGConnector<NsgBundleMap>): CompanionInputFieldDropdown {
@@ -87,6 +93,18 @@ export function parseTodoListItemOptionId(id: string): { categoryName: string; i
 	return {
 		categoryName: splitId[0],
 		itemName: splitId[1],
+	}
+}
+
+export function getFeudAnswerOption(socket: NodeCGConnector<NsgBundleMap>): CompanionInputFieldDropdown {
+	const board = socket.replicants[LAYOUT_BUNDLE_NAME].feudBoard?.answers ?? []
+
+	return {
+		id: 'answer',
+		type: 'dropdown',
+		label: 'Answer',
+		default: 0,
+		choices: Array.from({ length: 8 }, (_, i) => ({ id: i, label: `#${i + 1} - ${board[i]?.answer ?? '(empty)'}` })),
 	}
 }
 

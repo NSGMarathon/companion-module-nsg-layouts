@@ -14,6 +14,7 @@ import {
 import type NodeCG from '@nodecg/types'
 import type NodeCGSocketProtocol from '@nodecg/types/types/socket-protocol'
 import semver from 'semver'
+import { cloneDeep } from 'lodash'
 
 interface NodeCGOptions {
 	host?: string
@@ -23,7 +24,7 @@ interface NodeCGOptions {
 const ARRAY_MUTATOR_METHODS = ['copyWithin', 'fill', 'pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift']
 
 type NodeCGConnectorEventMap = {
-	replicantUpdate: (name: string, bundleName: string) => void
+	replicantUpdate: (name: string, bundleName: string, newValue: unknown, oldValue: unknown) => void
 	connect: () => void
 }
 
@@ -134,13 +135,16 @@ export class NodeCGConnector<
 				const metadata = this.replicantMetadata[data.namespace][data.name]
 				const expectedRevision = metadata.revision + 1
 
+				let oldValue: unknown;
 				if (expectedRevision !== data.revision) {
 					this.instance.log(
 						'warn',
 						`Expected revision for replicant ${data.name} to be ${expectedRevision}, but got ${data.revision}; forcing full update.`
 					)
+					oldValue = this.replicants[data.namespace][data.name];
 					this.replicants[data.namespace][data.name] = await this.readReplicant(data.name, data.namespace)
 				} else {
+					oldValue = cloneDeep(this.replicants[data.namespace][data.name]);
 					data.operations.forEach((operation) => {
 						this.applyOperation(data.namespace, data.name, this.replicants[data.namespace][data.name], operation)
 					})
@@ -150,7 +154,7 @@ export class NodeCGConnector<
 				if (data.name === 'bundles' && data.namespace === 'nodecg') {
 					await this.onBundleListChange()
 				}
-				this.emit('replicantUpdate', data.name, data.namespace)
+				this.emit('replicantUpdate', data.name, data.namespace, this.replicants[data.namespace][data.name], oldValue)
 			}
 		})
 
@@ -259,7 +263,7 @@ export class NodeCGConnector<
 					}
 
 					this.replicants[bundleName][name] = result!.value
-					this.emit('replicantUpdate', name, bundleName)
+					this.emit('replicantUpdate', name, bundleName, result!.value, undefined)
 					resolve()
 				}
 			)
@@ -320,8 +324,9 @@ export class NodeCGConnector<
 
 					if (data && data.revision !== metadata.revision) {
 						metadata.revision = data.revision
+						const oldValue = this.replicants[bundleName][name]
 						;(this.replicants[bundleName][name] as unknown) = data.value
-						this.emit('replicantUpdate', String(name), String(bundleName))
+						this.emit('replicantUpdate', String(name), String(bundleName), data.value, oldValue)
 					}
 
 					if (rejectReason) {

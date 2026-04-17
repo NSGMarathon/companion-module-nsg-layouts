@@ -1,6 +1,7 @@
 import { CompanionActionDefinitions } from '@companion-module/base'
 import { NodeCGConnector } from './NodeCGConnector'
 import {
+	getFeudAnswerOption,
 	getTodoListItemOptions,
 	LAYOUT_BUNDLE_NAME,
 	LAYOUT_FEED_COUNT,
@@ -32,6 +33,9 @@ export enum NsgAction {
 	SetStageDisplayMessageMode = 'set_stage_display_message_mode',
 	SetStageDisplayMessageColor = 'set_stage_display_message_color',
 	SetStageDisplayMode = 'set_stage_display_mode',
+	FeudSetBuzzerWinner = 'feud_set_buzzer_winner',
+	FeudMarkAnswerGuessed = 'feud_mark_answer_guessed',
+	FeudMarkNoAnswerGuessed = 'feud_mark_no_answer_guessed',
 }
 
 async function switchScene(
@@ -51,6 +55,7 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 	const activeTeams = socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun?.teams ?? []
 
 	const teamOption = getTeamOption(activeTeams)
+	const feudAnswerOption = getFeudAnswerOption(socket)
 
 	return {
 		...socket.getActions(),
@@ -451,6 +456,40 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						},
 					},
 				])
+			}
+		},
+		[NsgAction.FeudSetBuzzerWinner]: {
+			name: 'Set Feud buzzer winner',
+			options: [
+				{
+					id: 'team',
+					label: 'Team',
+					type: 'dropdown',
+					default: 'teamA',
+					choices: [
+						{ id: 'teamA', label: 'Team 1' },
+						{ id: 'teamB', label: 'Team 2' },
+					]
+				}
+			],
+			callback: async (action) => {
+				await socket.sendMessage('feud:setBuzzerWinner', LAYOUT_BUNDLE_NAME, { team: action.options.team })
+			}
+		},
+		[NsgAction.FeudMarkAnswerGuessed]: {
+			name: 'Mark Feud answer as guessed',
+			options: [
+				feudAnswerOption
+			],
+			callback: async (action) => {
+				await socket.sendMessage('feud:markAnswerGuessed', LAYOUT_BUNDLE_NAME, { answerIndex: action.options.answer })
+			}
+		},
+		[NsgAction.FeudMarkNoAnswerGuessed]: {
+			name: 'Mark incorrect Feud guess',
+			options: [],
+			callback: async () => {
+				await socket.sendMessage('feud:markNoAnswerGuessed', LAYOUT_BUNDLE_NAME)
 			}
 		},
 	}

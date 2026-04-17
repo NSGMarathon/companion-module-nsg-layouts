@@ -1,4 +1,4 @@
-import { InstanceBase, runEntrypoint, SomeCompanionConfigField } from '@companion-module/base'
+import { CompanionVariableValues, InstanceBase, runEntrypoint, SomeCompanionConfigField } from '@companion-module/base'
 import { NodeCGConnector } from './NodeCGConnector'
 import { getActionDefinitions } from './actions'
 import { getFeedbackDefinitions, NsgFeedback } from './feedbacks'
@@ -12,6 +12,10 @@ import { CompanionVariableValue } from '@companion-module/base/dist/module-api/v
 import { formatCurrencyAmount, isBlank } from './helpers/StringHelper'
 import { formatScheduleItemTalentList, prettyPrintTalentIdList } from './helpers/TalentHelper'
 import { DateTime, Duration } from 'luxon'
+import { ActiveSpeedrun } from './types/replicants/activeSpeedrun'
+import { NextSpeedrun } from './types/replicants/nextSpeedrun'
+import { FeudTeamInfo } from './types/replicants/feudTeamInfo'
+import { FeudBoard } from './types/replicants/feudBoard'
 
 interface ModuleConfig {
 	host?: string
@@ -76,7 +80,10 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					'videoFiles',
 					'interstitialVideoState',
 					'todoList',
-					'stageDisplayState'
+					'stageDisplayState',
+					'feudTeamInfo',
+					'feudState',
+					'feudBoard',
 				],
 			},
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
@@ -87,8 +94,11 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 		this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
 		this.setActionDefinitions(getActionDefinitions(this.socket))
 
-		this.socket.on('replicantUpdate', (name) => {
-			this.assignDynamicVariablesAndFeedback(name as keyof NsgLayoutsReplicantMap)
+		this.socket.on('replicantUpdate', (name, bundleName, newValue, oldValue) => {
+			if (bundleName === LAYOUT_BUNDLE_NAME) {
+				// @ts-ignore: i'm not untangling this maze of types. sorry
+				this.assignDynamicVariablesAndFeedback(name as keyof NsgLayoutsReplicantMap, newValue, oldValue)
+			}
 		})
 
 		this.socket.on('connect', () => {
@@ -206,14 +216,18 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 		}
 	}
 
-	assignDynamicVariablesAndFeedback(replicantName: keyof NsgLayoutsReplicantMap | 'bundles') {
+	assignDynamicVariablesAndFeedback<Key extends keyof NsgLayoutsReplicantMap>(
+		replicantName: Key,
+		newValue: NsgLayoutsReplicantMap[Key],
+		oldValue: NsgLayoutsReplicantMap[Key] | undefined
+	) {
 		switch (replicantName) {
 			case 'activeSpeedrun': {
 				this.setVariableDefinitions(getVariableDefinitions(this.socket))
 				this.setActionDefinitions(getActionDefinitions(this.socket))
 				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
 				this.setPresetDefinitions(getPresetDefinitions(this, this.socket))
-				const activeSpeedrun = this.socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun
+				const activeSpeedrun = newValue as ActiveSpeedrun
 				const indices = this.getSpeedrunIndices()
 				this.setVariableValues({
 					team_count: activeSpeedrun?.teams.length ?? 0,
@@ -230,7 +244,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				break
 			}
 			case 'nextSpeedrun': {
-				const nextSpeedrun = this.socket.replicants[LAYOUT_BUNDLE_NAME].nextSpeedrun
+				const nextSpeedrun = newValue as NextSpeedrun
 				const indices = this.getSpeedrunIndices()
 				this.setVariableValues({
 					next_run_name: nextSpeedrun?.title,
@@ -263,10 +277,10 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				})
 				break
 			case 'timer':
-				this.timerUpdateFn(this.socket.replicants[LAYOUT_BUNDLE_NAME].timer)
+				this.timerUpdateFn(newValue as Timer)
 				break
 			case 'donationTotal':
-				const rawTotal = this.socket.replicants[LAYOUT_BUNDLE_NAME].donationTotal ?? 0
+				const rawTotal = newValue as number ?? 0
 				this.setVariableValues({
 					donation_total: `${formatCurrencyAmount(rawTotal)} kr`,
 					donation_total_raw: rawTotal,
@@ -315,6 +329,34 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					NsgFeedback.StageDisplayMessageColor,
 					NsgFeedback.StageDisplayMode
 				)
+				break
+			case 'feudTeamInfo': {
+				const teamInfo = newValue as FeudTeamInfo
+				this.setVariableValues({
+					feud_team_a_name: teamInfo?.teamA.name,
+					feud_team_b_name: teamInfo?.teamB.name,
+					feud_team_a_score: teamInfo?.teamA.score,
+					feud_team_b_score: teamInfo?.teamB.score,
+				})
+				break
+			}
+			case 'feudBoard': {
+				this.checkFeedbacks(NsgFeedback.FeudAnswerGuessed)
+
+				const oldBoard = oldValue as FeudBoard
+				const newBoard = newValue as FeudBoard
+				if (oldBoard != null && oldBoard.answers.length !== newBoard.answers.length) {
+					this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
+					this.setActionDefinitions(getActionDefinitions(this.socket))
+
+					const boardVariables: CompanionVariableValues = {}
+					for (let i = 1; i <= 8; i++) {
+						boardVariables[`feud_answer_${i}`] = newBoard.answers[i - 1]?.answer ?? '(empty)'
+						boardVariables[`feud_answer_value_${i}`] = newBoard.answers[i - 1]?.value ?? 0
+					}
+					this.setVariableValues(boardVariables)
+				}
+			}
 		}
 	}
 
