@@ -17,6 +17,7 @@ import { StageDisplayState } from './types/replicants/stageDisplayState'
 import { FeudBoard } from './types/replicants/feudBoard'
 import { FeudState } from './types/replicants/feudState'
 import { FeudTeamInfo } from './types/replicants/feudTeamInfo'
+import { FeudLowerThirdMode } from './types/replicants/feudLowerThirdMode'
 
 export const LAYOUT_BUNDLE_NAME = 'nsg2-layouts'
 export const LAYOUT_FEED_COUNT = 3
@@ -43,6 +44,7 @@ export interface NsgLayoutsReplicantMap {
 	feudBoard?: FeudBoard
 	feudState?: FeudState
 	feudTeamInfo?: FeudTeamInfo
+	feudLowerThirdMode?: FeudLowerThirdMode
 }
 
 export function getTodoListCategoryOptions(socket: NodeCGConnector<NsgBundleMap>): CompanionInputFieldDropdown {
@@ -128,5 +130,18 @@ export const stageDisplayMessageColorOption: CompanionInputFieldDropdown = {
 		{ id: 'YELLOW', label: 'Yellow' },
 		{ id: 'RED', label: 'Red' },
 		{ id: 'GRAY', label: 'Gray' }
+	]
+}
+
+export const feudLowerThirdModeOption: CompanionInputFieldDropdown = {
+	id: 'mode',
+	label: 'Mode',
+	type: 'dropdown',
+	default: 'HIDDEN',
+	choices: [
+		{ id: 'HIDDEN', label: 'Hidden' },
+		{ id: 'TEAM_A', label: 'Team 1' },
+		{ id: 'TEAM_B', label: 'Team 2' },
+		{ id: 'BOTH_TEAMS', label: 'Both teams' }
 	]
 }

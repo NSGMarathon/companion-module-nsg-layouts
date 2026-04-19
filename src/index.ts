@@ -84,6 +84,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					'feudTeamInfo',
 					'feudState',
 					'feudBoard',
+					'feudLowerThirdMode',
 				],
 			},
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
@@ -356,7 +357,10 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					}
 					this.setVariableValues(boardVariables)
 				}
+				break
 			}
+			case 'feudLowerThirdMode':
+				this.checkFeedbacks(NsgFeedback.FeudLowerThirdMode)
 		}
 	}
 

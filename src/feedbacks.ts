@@ -1,5 +1,6 @@
 import { combineRgb, CompanionFeedbackDefinitions } from '@companion-module/base'
 import {
+	feudLowerThirdModeOption,
 	getFeudAnswerOption,
 	getTodoListCategoryOptions,
 	getTodoListItemOptions,
@@ -40,6 +41,7 @@ export enum NsgFeedback {
 	StageDisplayMessageColor = 'stage_display_message_color',
 	StageDisplayMode = 'stage_display_mode',
 	FeudAnswerGuessed = 'feud_answer_guessed',
+	FeudLowerThirdMode = 'feud_lower_third_mode',
 }
 
 function isSceneInProgram(
@@ -424,7 +426,7 @@ export function getFeedbackDefinitions(
 		},
 		[NsgFeedback.FeudAnswerGuessed]: {
 			type: 'boolean',
-			name: 'Feud answer guessed',
+			name: 'Feud: Answer guessed',
 			defaultStyle: {
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(0, 255, 0),
@@ -434,6 +436,20 @@ export function getFeedbackDefinitions(
 			],
 			callback: (action) => {
 				return (socket.replicants[LAYOUT_BUNDLE_NAME].feudBoard?.answers ?? [])[action.options.answer as number]?.guessed ?? false
+			}
+		},
+		[NsgFeedback.FeudLowerThirdMode]: {
+			type: 'boolean',
+			name: 'Feud: Lower third mode',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [
+				feudLowerThirdModeOption,
+			],
+			callback: (feedback) => {
+				return (socket.replicants[LAYOUT_BUNDLE_NAME].feudLowerThirdMode ?? 'HIDDEN') === feedback.options.mode
 			}
 		}
 	}

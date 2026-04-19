@@ -1,6 +1,7 @@
 import { CompanionActionDefinitions } from '@companion-module/base'
 import { NodeCGConnector } from './NodeCGConnector'
 import {
+	feudLowerThirdModeOption,
 	getFeudAnswerOption,
 	getTodoListItemOptions,
 	LAYOUT_BUNDLE_NAME,
@@ -13,6 +14,7 @@ import {
 import { getTeamOption } from './helpers/TalentHelper'
 import { ObsConfig } from './types/replicants/obsConfig'
 import range from 'lodash/range'
+import { FeudLowerThirdMode } from './types/replicants/feudLowerThirdMode'
 
 export enum NsgAction {
 	Timer = 'timer',
@@ -36,6 +38,7 @@ export enum NsgAction {
 	FeudSetBuzzerWinner = 'feud_set_buzzer_winner',
 	FeudMarkAnswerGuessed = 'feud_mark_answer_guessed',
 	FeudMarkNoAnswerGuessed = 'feud_mark_no_answer_guessed',
+	FeudSetLowerThirdMode = 'feud_set_lower_third_mode',
 }
 
 async function switchScene(
@@ -459,7 +462,7 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 			}
 		},
 		[NsgAction.FeudSetBuzzerWinner]: {
-			name: 'Set Feud buzzer winner',
+			name: 'Feud: Set buzzer winner',
 			options: [
 				{
 					id: 'team',
@@ -477,7 +480,7 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 			}
 		},
 		[NsgAction.FeudMarkAnswerGuessed]: {
-			name: 'Mark Feud answer as guessed',
+			name: 'Feud: Mark answer as guessed',
 			options: [
 				feudAnswerOption
 			],
@@ -486,11 +489,20 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 			}
 		},
 		[NsgAction.FeudMarkNoAnswerGuessed]: {
-			name: 'Mark incorrect Feud guess',
+			name: 'Feud: Mark incorrect guess',
 			options: [],
 			callback: async () => {
 				await socket.sendMessage('feud:markNoAnswerGuessed', LAYOUT_BUNDLE_NAME)
 			}
 		},
+		[NsgAction.FeudSetLowerThirdMode]: {
+			name: 'Feud: Set lower third mode',
+			options: [
+				feudLowerThirdModeOption,
+			],
+			callback: async (action) => {
+				socket.proposeReplicantAssignment('feudLowerThirdMode', LAYOUT_BUNDLE_NAME, action.options.mode as FeudLowerThirdMode)
+			}
+		}
 	}
 }
