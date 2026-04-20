@@ -28,6 +28,7 @@ export function getVariableDefinitions(socket: NodeCGConnector<NsgBundleMap>): C
 		{ variableId: 'feud_team_a_score', name: 'Score of the first Feud team' },
 		{ variableId: 'feud_team_b_name', name: 'Name of the second Feud team' },
 		{ variableId: 'feud_team_b_score', name: 'Score of the second Feud team' },
+		{ variableId: 'interstitial_time_remaining', name: 'Time remaining in interstitial video' },
 	]
 
 	for (let i = 1; i <= 8; i++) {

@@ -2,11 +2,11 @@ import { CompanionActionDefinitions } from '@companion-module/base'
 import { NodeCGConnector } from './NodeCGConnector'
 import {
 	feudLowerThirdModeOption,
-	getFeudAnswerOption,
+	getFeudAnswerOption, getReturnToSceneOptions,
 	getTodoListItemOptions,
 	LAYOUT_BUNDLE_NAME,
 	LAYOUT_FEED_COUNT,
-	NsgBundleMap,
+	NsgBundleMap, parseReturnToScene,
 	parseTodoListItemOptionId,
 	stageDisplayMessageColorOption,
 	stageDisplayMessageModeOption,
@@ -15,6 +15,7 @@ import { getTeamOption } from './helpers/TalentHelper'
 import { ObsConfig } from './types/replicants/obsConfig'
 import range from 'lodash/range'
 import { FeudLowerThirdMode } from './types/replicants/feudLowerThirdMode'
+import { DropdownChoiceId } from '@companion-module/base/dist/module-api/input'
 
 export enum NsgAction {
 	Timer = 'timer',
@@ -275,6 +276,7 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						label: videoFile.name,
 					})),
 				},
+				getReturnToSceneOptions(socket),
 			],
 			callback: async (action) => {
 				const obsState = socket.replicants[LAYOUT_BUNDLE_NAME].obsState
@@ -287,15 +289,19 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 					obsConfig?.interstitialVideoScene == null
 				)
 					return
+
 				const videoFile = (socket.replicants[LAYOUT_BUNDLE_NAME].videoFiles?.interstitials ?? []).find(
 					(video) => video.path === action.options.file
 				)
-				if (videoFile != null) {
-					await socket.sendMessage('videos:playInterstitial', LAYOUT_BUNDLE_NAME, {
-						file: videoFile,
-						returnToScene: 'INTERMISSION',
-					})
-				}
+				if (videoFile == null) return
+
+				const returnToScene = parseReturnToScene(socket, action.options.returnToScene as DropdownChoiceId);
+				if (returnToScene == null) return;
+
+				await socket.sendMessage('videos:playInterstitial', LAYOUT_BUNDLE_NAME, {
+					file: videoFile,
+					returnToScene,
+				})
 			},
 		},
 		[NsgAction.SetTodoItemCompleted]: {

@@ -259,6 +259,7 @@ export function getPresetDefinitions(
 								actionId: NsgAction.PlayInterstitialVideo,
 								options: {
 									file: video.path,
+									returnToScene: 0,
 								},
 							},
 						],
@@ -320,6 +321,31 @@ export function getPresetDefinitions(
 		...teamTimerResultForfeitPresets,
 		...interstitialVideoPresets,
 		...todoListItemPresets,
+
+		interstitial_video_state: {
+			type: 'button',
+			category: 'Interstitial videos',
+			name: 'Interstitial video state',
+			style: {
+				text: 'NOTHING PLAYING',
+				size: '14',
+				color: combineRgb(255, 255, 255),
+				bgcolor: combineRgb(0, 0, 0),
+			},
+			feedbacks: [
+				{
+					feedbackId: NsgFeedback.InterstitialVideoPlaying,
+					options: {},
+					style: {
+						text: 'PLAY\\n$(nsg:interstitial_time_remaining)',
+						color: combineRgb(0, 0, 0),
+						bgcolor: combineRgb(0, 255, 0),
+						size: '18',
+					}
+				}
+			],
+			steps: [],
+		},
 
 		main_timer_start_stop_resume: {
 			type: 'button',

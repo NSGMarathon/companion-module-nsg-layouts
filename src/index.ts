@@ -16,6 +16,7 @@ import { ActiveSpeedrun } from './types/replicants/activeSpeedrun'
 import { NextSpeedrun } from './types/replicants/nextSpeedrun'
 import { FeudTeamInfo } from './types/replicants/feudTeamInfo'
 import { FeudBoard } from './types/replicants/feudBoard'
+import { InterstitialVideoState } from './types/replicants/interstitialVideoState'
 
 interface ModuleConfig {
 	host?: string
@@ -305,9 +306,17 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				this.setActionDefinitions(getActionDefinitions(this.socket))
 				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
 				break
-			case 'interstitialVideoState':
-				this.checkFeedbacks(NsgFeedback.InterstitialVideoPlaying)
+			case 'interstitialVideoState': {
+				const newState = newValue as InterstitialVideoState;
+				const oldState = oldValue as InterstitialVideoState;
+				if (newState.isRunning !== oldState?.isRunning) {
+					this.checkFeedbacks(NsgFeedback.InterstitialVideoPlaying)
+				}
+				this.setVariableValues({
+					interstitial_time_remaining: !newState.isRunning || newState.timeRemainingMillis == null ? undefined : Duration.fromMillis(newState.timeRemainingMillis).toFormat('mm:ss'),
+				})
 				break
+			}
 			case 'videoFiles':
 				this.setActionDefinitions(getActionDefinitions(this.socket))
 				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
