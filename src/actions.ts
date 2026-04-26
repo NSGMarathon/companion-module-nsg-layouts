@@ -2,6 +2,7 @@ import { CompanionActionDefinitions } from '@companion-module/base'
 import { NodeCGConnector } from './NodeCGConnector'
 import {
 	feudLowerThirdModeOption,
+	feudTeamOption,
 	getFeudAnswerOption, getReturnToSceneOptions,
 	getTodoListItemOptions,
 	LAYOUT_BUNDLE_NAME,
@@ -40,6 +41,8 @@ export enum NsgAction {
 	FeudMarkAnswerGuessed = 'feud_mark_answer_guessed',
 	FeudMarkNoAnswerGuessed = 'feud_mark_no_answer_guessed',
 	FeudSetLowerThirdMode = 'feud_set_lower_third_mode',
+	FeudRevealLowestAnswerNotGuessed = 'feud_reveal_lowest_answer_not_guessed',
+	FeudCompletePlayOrPass = 'feud_complete_play_or_pass',
 }
 
 async function switchScene(
@@ -470,16 +473,7 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 		[NsgAction.FeudSetBuzzerWinner]: {
 			name: 'Feud: Set buzzer winner',
 			options: [
-				{
-					id: 'team',
-					label: 'Team',
-					type: 'dropdown',
-					default: 'teamA',
-					choices: [
-						{ id: 'teamA', label: 'Team 1' },
-						{ id: 'teamB', label: 'Team 2' },
-					]
-				}
+				feudTeamOption
 			],
 			callback: async (action) => {
 				await socket.sendMessage('feud:setBuzzerWinner', LAYOUT_BUNDLE_NAME, { team: action.options.team })
@@ -508,6 +502,23 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 			],
 			callback: async (action) => {
 				socket.proposeReplicantAssignment('feudLowerThirdMode', LAYOUT_BUNDLE_NAME, action.options.mode as FeudLowerThirdMode)
+			}
+		},
+		[NsgAction.FeudRevealLowestAnswerNotGuessed]: {
+			name: 'Feud: Reveal lowest answer not guessed',
+			description: 'Works after a Feud round has completed',
+			options: [],
+			callback: async () => {
+				await socket.sendMessage('feud:revealLowestAnswerNotGuessed', LAYOUT_BUNDLE_NAME);
+			}
+		},
+		[NsgAction.FeudCompletePlayOrPass]: {
+			name: 'Feud: Complete play or pass',
+			options: [
+				feudTeamOption,
+			],
+			callback: async (action) => {
+				await socket.sendMessage('feud:completePlayOrPass', LAYOUT_BUNDLE_NAME, { teamToPlay: action.options.team })
 			}
 		}
 	}

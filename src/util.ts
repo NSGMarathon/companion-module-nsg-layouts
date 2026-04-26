@@ -198,6 +198,17 @@ export const stageDisplayMessageColorOption: CompanionInputFieldDropdown = {
 	]
 }
 
+export const feudTeamOption: CompanionInputFieldDropdown = {
+	id: 'team',
+	label: 'Team',
+	type: 'dropdown',
+	default: 'teamA',
+	choices: [
+		{ id: 'teamA', label: 'Team 1' },
+		{ id: 'teamB', label: 'Team 2' },
+	]
+}
+
 export const feudLowerThirdModeOption: CompanionInputFieldDropdown = {
 	id: 'mode',
 	label: 'Mode',

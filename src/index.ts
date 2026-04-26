@@ -17,6 +17,7 @@ import { NextSpeedrun } from './types/replicants/nextSpeedrun'
 import { FeudTeamInfo } from './types/replicants/feudTeamInfo'
 import { FeudBoard } from './types/replicants/feudBoard'
 import { InterstitialVideoState } from './types/replicants/interstitialVideoState'
+import { FeudState } from './types/replicants/feudState'
 
 interface ModuleConfig {
 	host?: string
@@ -366,6 +367,10 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					}
 					this.setVariableValues(boardVariables)
 				}
+				break
+			}
+			case 'feudState': {
+				this.setVariableValues({ feud_state: (newValue as FeudState).state })
 				break
 			}
 			case 'feudLowerThirdMode':
