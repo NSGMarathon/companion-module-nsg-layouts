@@ -38,6 +38,8 @@ export enum NsgFeedback {
 	StageDisplayMessageMode = 'stage_display_message_mode',
 	StageDisplayMessageColor = 'stage_display_message_color',
 	StageDisplayMode = 'stage_display_mode',
+	JepScoreOverlayMode = 'jep_score_overlay_mode',
+	JepClueBoxVisible = 'jep_clue_box_visible',
 }
 
 function isSceneInProgram(
@@ -356,7 +358,7 @@ export function getFeedbackDefinitions(
 				bgcolor: combineRgb(0, 255, 0),
 			},
 			options: [],
-			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.visible ?? false
+			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.visible ?? false,
 		},
 		[NsgFeedback.StageDisplayMessageText]: {
 			type: 'boolean',
@@ -370,10 +372,12 @@ export function getFeedbackDefinitions(
 					id: 'text',
 					type: 'textinput',
 					label: 'Text',
-					default: ''
-				}
+					default: '',
+				},
 			],
-			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.text?.toLowerCase() === (action.options.text as string).toLowerCase()
+			callback: (action) =>
+				socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.text?.toLowerCase() ===
+				(action.options.text as string).toLowerCase(),
 		},
 		[NsgFeedback.StageDisplayMessageMode]: {
 			type: 'boolean',
@@ -382,10 +386,9 @@ export function getFeedbackDefinitions(
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(0, 255, 0),
 			},
-			options: [
-				stageDisplayMessageModeOption
-			],
-			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.mode === action.options.mode
+			options: [stageDisplayMessageModeOption],
+			callback: (action) =>
+				socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.mode === action.options.mode,
 		},
 		[NsgFeedback.StageDisplayMessageColor]: {
 			type: 'boolean',
@@ -394,10 +397,9 @@ export function getFeedbackDefinitions(
 				color: combineRgb(0, 0, 0),
 				bgcolor: combineRgb(0, 255, 0),
 			},
-			options: [
-				stageDisplayMessageColorOption
-			],
-			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.color === action.options.color
+			options: [stageDisplayMessageColorOption],
+			callback: (action) =>
+				socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.color === action.options.color,
 		},
 		[NsgFeedback.StageDisplayMode]: {
 			type: 'boolean',
@@ -415,10 +417,43 @@ export function getFeedbackDefinitions(
 					choices: [
 						{ id: 'PREVIEW', label: 'Preview' },
 						{ id: 'PROGRAM', label: 'Program' },
-					]
-				}
+					],
+				},
 			],
-			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.mode === action.options.mode
+			callback: (action) => socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.mode === action.options.mode,
+		},
+		[NsgFeedback.JepClueBoxVisible]: {
+			type: 'boolean',
+			name: 'Jeopardy: Clue box is visible',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [],
+			callback: () => socket.replicants[LAYOUT_BUNDLE_NAME].jepOverlays?.clueBoxVisible ?? false,
+		},
+		[NsgFeedback.JepScoreOverlayMode]: {
+			type: 'boolean',
+			name: 'Jeopardy: Score overlay mode equals',
+			defaultStyle: {
+				color: combineRgb(0, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
+			},
+			options: [
+				{
+					id: 'value',
+					label: 'Value',
+					type: 'dropdown',
+					default: 'NONE',
+					choices: [
+						{ id: 'NONE', label: 'No names' },
+						{ id: 'COMPACT', label: 'Compact mode' },
+						{ id: 'FULL', label: 'Full mode' },
+					],
+				},
+			],
+			callback: (action) =>
+				socket.replicants[LAYOUT_BUNDLE_NAME].jepOverlays?.scoreOverlayMode === action.options.value,
 		},
 	}
 }

@@ -80,6 +80,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					'interstitialVideoState',
 					'todoList',
 					'stageDisplayState',
+					'jepOverlays',
 				],
 			},
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
@@ -276,7 +277,7 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				this.timerUpdateFn(newValue as Timer)
 				break
 			case 'donationTotal':
-				const rawTotal = newValue as number ?? 0
+				const rawTotal = (newValue as number) ?? 0
 				this.setVariableValues({
 					donation_total: `${formatCurrencyAmount(rawTotal)} kr`,
 					donation_total_raw: rawTotal,
@@ -301,13 +302,16 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 				this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
 				break
 			case 'interstitialVideoState': {
-				const newState = newValue as InterstitialVideoState;
-				const oldState = oldValue as InterstitialVideoState;
+				const newState = newValue as InterstitialVideoState
+				const oldState = oldValue as InterstitialVideoState
 				if (newState.isRunning !== oldState?.isRunning) {
 					this.checkFeedbacks(NsgFeedback.InterstitialVideoPlaying)
 				}
 				this.setVariableValues({
-					interstitial_time_remaining: !newState.isRunning || newState.timeRemainingMillis == null ? undefined : Duration.fromMillis(newState.timeRemainingMillis).toFormat('mm:ss'),
+					interstitial_time_remaining:
+						!newState.isRunning || newState.timeRemainingMillis == null
+							? undefined
+							: Duration.fromMillis(newState.timeRemainingMillis).toFormat('mm:ss'),
 				})
 				break
 			}
@@ -333,6 +337,9 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					NsgFeedback.StageDisplayMessageColor,
 					NsgFeedback.StageDisplayMode
 				)
+				break
+			case 'jepOverlays':
+				this.checkFeedbacks(NsgFeedback.JepScoreOverlayMode, NsgFeedback.JepClueBoxVisible)
 				break
 		}
 	}

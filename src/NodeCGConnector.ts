@@ -135,16 +135,16 @@ export class NodeCGConnector<
 				const metadata = this.replicantMetadata[data.namespace][data.name]
 				const expectedRevision = metadata.revision + 1
 
-				let oldValue: unknown;
+				let oldValue: unknown
 				if (expectedRevision !== data.revision) {
 					this.instance.log(
 						'warn',
 						`Expected revision for replicant ${data.name} to be ${expectedRevision}, but got ${data.revision}; forcing full update.`
 					)
-					oldValue = this.replicants[data.namespace][data.name];
+					oldValue = this.replicants[data.namespace][data.name]
 					this.replicants[data.namespace][data.name] = await this.readReplicant(data.name, data.namespace)
 				} else {
-					oldValue = cloneDeep(this.replicants[data.namespace][data.name]);
+					oldValue = cloneDeep(this.replicants[data.namespace][data.name])
 					data.operations.forEach((operation) => {
 						this.applyOperation(data.namespace, data.name, this.replicants[data.namespace][data.name], operation)
 					})

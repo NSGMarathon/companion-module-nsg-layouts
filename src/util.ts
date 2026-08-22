@@ -15,9 +15,10 @@ import { NodeCGConnector } from './NodeCGConnector'
 import {
 	CompanionInputFieldDropdown,
 	DropdownChoice,
-	DropdownChoiceId
+	DropdownChoiceId,
 } from '@companion-module/base/dist/module-api/input'
 import { StageDisplayState } from './types/replicants/stageDisplayState'
+import { JepOverlays } from './types/replicants/jepOverlays'
 
 export const LAYOUT_BUNDLE_NAME = 'nsg2-layouts'
 export const LAYOUT_FEED_COUNT = 3
@@ -41,6 +42,7 @@ export interface NsgLayoutsReplicantMap {
 	interstitialVideoState?: InterstitialVideoState
 	todoList?: TodoList
 	stageDisplayState?: StageDisplayState
+	jepOverlays?: JepOverlays
 }
 
 export function getTodoListCategoryOptions(socket: NodeCGConnector<NsgBundleMap>): CompanionInputFieldDropdown {
@@ -98,43 +100,48 @@ export function getReturnToSceneOptions(socket: NodeCGConnector<NsgBundleMap>): 
 	const obsConfig = socket.replicants[LAYOUT_BUNDLE_NAME].obsConfig
 	const obsState = socket.replicants[LAYOUT_BUNDLE_NAME].obsState
 
-	const choices: DropdownChoice[] = obsConfig == null || obsState == null ? [] : (obsState?.scenes ?? [])
-		.filter((scene) =>
-			// Handled below
-			scene !== obsConfig.intermissionScene
-			// "utility scenes" that should never be switched to
-			&& scene !== obsConfig.videoInputsScene
-			&& scene !== obsConfig.interstitialVideoScene
-			&& !obsConfig.gameLayoutVideoFeedScenes.includes(scene)
-		)
-		.sort((a, b) => {
-			// there _has_ to be a better way of doing this, right?
-			if (a === obsConfig.intermissionScene) {
-				return -1;
-			} else if (b === obsConfig.intermissionScene) {
-				return 1;
-			}
+	const choices: DropdownChoice[] =
+		obsConfig == null || obsState == null
+			? []
+			: (obsState?.scenes ?? [])
+					.filter(
+						(scene) =>
+							// Handled below
+							scene !== obsConfig.intermissionScene &&
+							// "utility scenes" that should never be switched to
+							scene !== obsConfig.videoInputsScene &&
+							scene !== obsConfig.interstitialVideoScene &&
+							!obsConfig.gameLayoutVideoFeedScenes.includes(scene)
+					)
+					.sort((a, b) => {
+						// there _has_ to be a better way of doing this, right?
+						if (a === obsConfig.intermissionScene) {
+							return -1
+						} else if (b === obsConfig.intermissionScene) {
+							return 1
+						}
 
-			if (a === obsState.currentScene) {
-				return -1;
-			} else if (b === obsState.currentScene) {
-				return 1;
-			}
+						if (a === obsState.currentScene) {
+							return -1
+						} else if (b === obsState.currentScene) {
+							return 1
+						}
 
-			if (a === obsState.previewScene) {
-				return -1;
-			} else if (b === obsState.previewScene) {
-				return 1;
-			}
+						if (a === obsState.previewScene) {
+							return -1
+						} else if (b === obsState.previewScene) {
+							return 1
+						}
 
-			return a.localeCompare(b);
-		})
-		.map((scene) => ({ label: scene, id: scene }))
+						return a.localeCompare(b)
+					})
+					.map((scene) => ({ label: scene, id: scene }))
 
 	choices.unshift(
 		{ id: 0, label: 'Intermission scene' },
 		{ id: 1, label: 'Program scene (at time of activation)' },
-		{ id: 2, label: 'Preview scene (at time of activation)' })
+		{ id: 2, label: 'Preview scene (at time of activation)' }
+	)
 
 	return {
 		id: 'returnToScene',
@@ -147,12 +154,12 @@ export function getReturnToSceneOptions(socket: NodeCGConnector<NsgBundleMap>): 
 
 export function parseReturnToScene(socket: NodeCGConnector<NsgBundleMap>, optionId: DropdownChoiceId) {
 	if (optionId === 0) {
-		return socket.replicants[LAYOUT_BUNDLE_NAME].obsConfig?.intermissionScene ?? null;
+		return socket.replicants[LAYOUT_BUNDLE_NAME].obsConfig?.intermissionScene ?? null
 	} else if (optionId === 1 || optionId === 2) {
-		return socket.replicants[LAYOUT_BUNDLE_NAME].obsState?.[optionId === 1 ? 'currentScene' : 'previewScene'] ?? null;
+		return socket.replicants[LAYOUT_BUNDLE_NAME].obsState?.[optionId === 1 ? 'currentScene' : 'previewScene'] ?? null
 	}
 
-	return optionId;
+	return optionId
 }
 
 export const stageDisplayMessageModeOption: CompanionInputFieldDropdown = {
@@ -162,8 +169,8 @@ export const stageDisplayMessageModeOption: CompanionInputFieldDropdown = {
 	default: 'QUICK',
 	choices: [
 		{ id: 'QUICK', label: 'Quick' },
-		{ id: 'GENTLE', label: 'Gentle' }
-	]
+		{ id: 'GENTLE', label: 'Gentle' },
+	],
 }
 
 export const stageDisplayMessageColorOption: CompanionInputFieldDropdown = {
@@ -174,6 +181,6 @@ export const stageDisplayMessageColorOption: CompanionInputFieldDropdown = {
 	choices: [
 		{ id: 'YELLOW', label: 'Yellow' },
 		{ id: 'RED', label: 'Red' },
-		{ id: 'GRAY', label: 'Gray' }
-	]
+		{ id: 'GRAY', label: 'Gray' },
+	],
 }

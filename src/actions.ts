@@ -5,7 +5,8 @@ import {
 	getTodoListItemOptions,
 	LAYOUT_BUNDLE_NAME,
 	LAYOUT_FEED_COUNT,
-	NsgBundleMap, parseReturnToScene,
+	NsgBundleMap,
+	parseReturnToScene,
 	parseTodoListItemOptionId,
 	stageDisplayMessageColorOption,
 	stageDisplayMessageModeOption,
@@ -34,6 +35,8 @@ export enum NsgAction {
 	SetStageDisplayMessageMode = 'set_stage_display_message_mode',
 	SetStageDisplayMessageColor = 'set_stage_display_message_color',
 	SetStageDisplayMode = 'set_stage_display_mode',
+	JepSetScoreOverlayMode = 'jep_set_score_overlay_mode',
+	JepSetClueBoxVisible = 'jep_set_clue_box_visible',
 }
 
 async function switchScene(
@@ -288,8 +291,8 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 				)
 				if (videoFile == null) return
 
-				const returnToScene = parseReturnToScene(socket, action.options.returnToScene as DropdownChoiceId);
-				if (returnToScene == null) return;
+				const returnToScene = parseReturnToScene(socket, action.options.returnToScene as DropdownChoiceId)
+				if (returnToScene == null) return
 
 				await socket.sendMessage('videos:playInterstitial', LAYOUT_BUNDLE_NAME, {
 					file: videoFile,
@@ -350,12 +353,13 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						{ id: 'true', label: 'Visible' },
 						{ id: 'false', label: 'Not Visible' },
 					],
-				}
+				},
 			],
 			callback: (action) => {
-				const newValue = action.options.behavior === 'toggle'
-					? !socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.visible
-					: action.options.behavior === 'true'
+				const newValue =
+					action.options.behavior === 'toggle'
+						? !socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.message.visible
+						: action.options.behavior === 'true'
 
 				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
 					{
@@ -363,17 +367,15 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						method: 'update',
 						args: {
 							prop: 'visible',
-							newValue
+							newValue,
 						},
 					},
 				])
-			}
+			},
 		},
 		[NsgAction.SetStageDisplayMessageMode]: {
 			name: 'Set stage display message mode',
-			options: [
-				stageDisplayMessageModeOption
-			],
+			options: [stageDisplayMessageModeOption],
 			callback: (action) => {
 				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
 					{
@@ -381,17 +383,15 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						method: 'update',
 						args: {
 							prop: 'mode',
-							newValue: action.options.mode
+							newValue: action.options.mode,
 						},
 					},
 				])
-			}
+			},
 		},
 		[NsgAction.SetStageDisplayMessageColor]: {
 			name: 'Set stage display message color',
-			options: [
-				stageDisplayMessageColorOption
-			],
+			options: [stageDisplayMessageColorOption],
 			callback: (action) => {
 				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
 					{
@@ -399,11 +399,11 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						method: 'update',
 						args: {
 							prop: 'color',
-							newValue: action.options.color
+							newValue: action.options.color,
 						},
 					},
 				])
-			}
+			},
 		},
 		[NsgAction.SetStageDisplayMessageText]: {
 			name: 'Set stage display message text',
@@ -413,8 +413,8 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 					type: 'textinput',
 					label: 'Text',
 					default: '',
-					required: true
-				}
+					required: true,
+				},
 			],
 			callback: (action) => {
 				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
@@ -423,11 +423,11 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						method: 'update',
 						args: {
 							prop: 'text',
-							newValue: action.options.text
+							newValue: action.options.text,
 						},
 					},
 				])
-			}
+			},
 		},
 		[NsgAction.SetStageDisplayMode]: {
 			name: 'Set stage display mode',
@@ -441,8 +441,8 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						{ id: 'toggle', label: 'Toggle' },
 						{ id: 'PREVIEW', label: 'Preview' },
 						{ id: 'PROGRAM', label: 'Program' },
-					]
-				}
+					],
+				},
 			],
 			callback: (action) => {
 				socket.proposeReplicantOperations('stageDisplayState', LAYOUT_BUNDLE_NAME, [
@@ -451,14 +451,76 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 						method: 'update',
 						args: {
 							prop: 'mode',
-							newValue: action.options.mode === 'toggle'
-								? socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.mode === 'PROGRAM'
-									? 'PREVIEW' : 'PROGRAM'
-								: action.options.mode
+							newValue:
+								action.options.mode === 'toggle'
+									? socket.replicants[LAYOUT_BUNDLE_NAME].stageDisplayState?.mode === 'PROGRAM'
+										? 'PREVIEW'
+										: 'PROGRAM'
+									: action.options.mode,
 						},
 					},
 				])
-			}
+			},
+		},
+		[NsgAction.JepSetClueBoxVisible]: {
+			name: 'Jeopardy: Set clue box visibility',
+			description: 'Used during Daily Double clues',
+			options: [
+				{
+					id: 'mode',
+					label: 'Mode',
+					type: 'dropdown',
+					default: 'toggle',
+					choices: [
+						{ id: 'toggle', label: 'Toggle' },
+						{ id: 'true', label: 'Visible' },
+						{ id: 'false', label: 'Hidden' },
+					],
+				},
+			],
+			callback: (action) => {
+				socket.proposeReplicantOperations('jepOverlays', LAYOUT_BUNDLE_NAME, [
+					{
+						path: '/',
+						method: 'update',
+						args: {
+							prop: 'clueBoxVisible',
+							newValue:
+								action.options.mode === 'toggle'
+									? !socket.replicants[LAYOUT_BUNDLE_NAME].jepOverlays?.clueBoxVisible
+									: action.options.mode === 'true',
+						},
+					},
+				])
+			},
+		},
+		[NsgAction.JepSetScoreOverlayMode]: {
+			name: 'Jeopardy: Set score overlay mode',
+			options: [
+				{
+					id: 'newValue',
+					label: 'New value',
+					type: 'dropdown',
+					default: 'NONE',
+					choices: [
+						{ id: 'NONE', label: 'No names' },
+						{ id: 'COMPACT', label: 'Compact mode' },
+						{ id: 'FULL', label: 'Full mode' },
+					],
+				},
+			],
+			callback: (action) => {
+				socket.proposeReplicantOperations('jepOverlays', LAYOUT_BUNDLE_NAME, [
+					{
+						path: '/',
+						method: 'update',
+						args: {
+							prop: 'scoreOverlayMode',
+							newValue: action.options.newValue,
+						},
+					},
+				])
+			},
 		},
 	}
 }

@@ -341,8 +341,8 @@ export function getPresetDefinitions(
 						color: combineRgb(0, 0, 0),
 						bgcolor: combineRgb(0, 255, 0),
 						size: '18',
-					}
-				}
+					},
+				},
 			],
 			steps: [],
 		},
