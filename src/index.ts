@@ -1,4 +1,4 @@
-import { CompanionVariableValues, InstanceBase, runEntrypoint, SomeCompanionConfigField } from '@companion-module/base'
+import { InstanceBase, runEntrypoint, SomeCompanionConfigField } from '@companion-module/base'
 import { NodeCGConnector } from './NodeCGConnector'
 import { getActionDefinitions } from './actions'
 import { getFeedbackDefinitions, NsgFeedback } from './feedbacks'
@@ -14,10 +14,7 @@ import { formatScheduleItemTalentList, prettyPrintTalentIdList } from './helpers
 import { DateTime, Duration } from 'luxon'
 import { ActiveSpeedrun } from './types/replicants/activeSpeedrun'
 import { NextSpeedrun } from './types/replicants/nextSpeedrun'
-import { FeudTeamInfo } from './types/replicants/feudTeamInfo'
-import { FeudBoard } from './types/replicants/feudBoard'
 import { InterstitialVideoState } from './types/replicants/interstitialVideoState'
-import { FeudState } from './types/replicants/feudState'
 
 interface ModuleConfig {
 	host?: string
@@ -83,10 +80,6 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					'interstitialVideoState',
 					'todoList',
 					'stageDisplayState',
-					'feudTeamInfo',
-					'feudState',
-					'feudBoard',
-					'feudLowerThirdMode',
 				],
 			},
 			{ [LAYOUT_BUNDLE_NAME]: '^0.1.0' }
@@ -341,40 +334,6 @@ export class NsgLayoutsInstance extends InstanceBase<ModuleConfig> {
 					NsgFeedback.StageDisplayMode
 				)
 				break
-			case 'feudTeamInfo': {
-				const teamInfo = newValue as FeudTeamInfo
-				this.setVariableValues({
-					feud_team_a_name: teamInfo?.teamA.name,
-					feud_team_b_name: teamInfo?.teamB.name,
-					feud_team_a_score: teamInfo?.teamA.score,
-					feud_team_b_score: teamInfo?.teamB.score,
-				})
-				break
-			}
-			case 'feudBoard': {
-				this.checkFeedbacks(NsgFeedback.FeudAnswerGuessed)
-
-				const oldBoard = oldValue as FeudBoard
-				const newBoard = newValue as FeudBoard
-				if (oldBoard != null && oldBoard.answers.length !== newBoard.answers.length) {
-					this.setFeedbackDefinitions(getFeedbackDefinitions(this, this.socket))
-					this.setActionDefinitions(getActionDefinitions(this.socket))
-
-					const boardVariables: CompanionVariableValues = {}
-					for (let i = 1; i <= 8; i++) {
-						boardVariables[`feud_answer_${i}`] = newBoard.answers[i - 1]?.answer ?? '(empty)'
-						boardVariables[`feud_answer_value_${i}`] = newBoard.answers[i - 1]?.value ?? 0
-					}
-					this.setVariableValues(boardVariables)
-				}
-				break
-			}
-			case 'feudState': {
-				this.setVariableValues({ feud_state: (newValue as FeudState).state })
-				break
-			}
-			case 'feudLowerThirdMode':
-				this.checkFeedbacks(NsgFeedback.FeudLowerThirdMode)
 		}
 	}
 

@@ -1,9 +1,7 @@
 import { CompanionActionDefinitions } from '@companion-module/base'
 import { NodeCGConnector } from './NodeCGConnector'
 import {
-	feudLowerThirdModeOption,
-	feudTeamOption,
-	getFeudAnswerOption, getReturnToSceneOptions,
+	getReturnToSceneOptions,
 	getTodoListItemOptions,
 	LAYOUT_BUNDLE_NAME,
 	LAYOUT_FEED_COUNT,
@@ -15,7 +13,6 @@ import {
 import { getTeamOption } from './helpers/TalentHelper'
 import { ObsConfig } from './types/replicants/obsConfig'
 import range from 'lodash/range'
-import { FeudLowerThirdMode } from './types/replicants/feudLowerThirdMode'
 import { DropdownChoiceId } from '@companion-module/base/dist/module-api/input'
 
 export enum NsgAction {
@@ -37,12 +34,6 @@ export enum NsgAction {
 	SetStageDisplayMessageMode = 'set_stage_display_message_mode',
 	SetStageDisplayMessageColor = 'set_stage_display_message_color',
 	SetStageDisplayMode = 'set_stage_display_mode',
-	FeudSetBuzzerWinner = 'feud_set_buzzer_winner',
-	FeudMarkAnswerGuessed = 'feud_mark_answer_guessed',
-	FeudMarkNoAnswerGuessed = 'feud_mark_no_answer_guessed',
-	FeudSetLowerThirdMode = 'feud_set_lower_third_mode',
-	FeudRevealLowestAnswerNotGuessed = 'feud_reveal_lowest_answer_not_guessed',
-	FeudCompletePlayOrPass = 'feud_complete_play_or_pass',
 }
 
 async function switchScene(
@@ -62,7 +53,6 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 	const activeTeams = socket.replicants[LAYOUT_BUNDLE_NAME].activeSpeedrun?.teams ?? []
 
 	const teamOption = getTeamOption(activeTeams)
-	const feudAnswerOption = getFeudAnswerOption(socket)
 
 	return {
 		...socket.getActions(),
@@ -470,56 +460,5 @@ export function getActionDefinitions(socket: NodeCGConnector<NsgBundleMap>): Com
 				])
 			}
 		},
-		[NsgAction.FeudSetBuzzerWinner]: {
-			name: 'Feud: Set buzzer winner',
-			options: [
-				feudTeamOption
-			],
-			callback: async (action) => {
-				await socket.sendMessage('feud:setBuzzerWinner', LAYOUT_BUNDLE_NAME, { team: action.options.team })
-			}
-		},
-		[NsgAction.FeudMarkAnswerGuessed]: {
-			name: 'Feud: Mark answer as guessed',
-			options: [
-				feudAnswerOption
-			],
-			callback: async (action) => {
-				await socket.sendMessage('feud:markAnswerGuessed', LAYOUT_BUNDLE_NAME, { answerIndex: action.options.answer })
-			}
-		},
-		[NsgAction.FeudMarkNoAnswerGuessed]: {
-			name: 'Feud: Mark incorrect guess',
-			options: [],
-			callback: async () => {
-				await socket.sendMessage('feud:markNoAnswerGuessed', LAYOUT_BUNDLE_NAME)
-			}
-		},
-		[NsgAction.FeudSetLowerThirdMode]: {
-			name: 'Feud: Set lower third mode',
-			options: [
-				feudLowerThirdModeOption,
-			],
-			callback: async (action) => {
-				socket.proposeReplicantAssignment('feudLowerThirdMode', LAYOUT_BUNDLE_NAME, action.options.mode as FeudLowerThirdMode)
-			}
-		},
-		[NsgAction.FeudRevealLowestAnswerNotGuessed]: {
-			name: 'Feud: Reveal lowest answer not guessed',
-			description: 'Works after a Feud round has completed',
-			options: [],
-			callback: async () => {
-				await socket.sendMessage('feud:revealLowestAnswerNotGuessed', LAYOUT_BUNDLE_NAME);
-			}
-		},
-		[NsgAction.FeudCompletePlayOrPass]: {
-			name: 'Feud: Complete play or pass',
-			options: [
-				feudTeamOption,
-			],
-			callback: async (action) => {
-				await socket.sendMessage('feud:completePlayOrPass', LAYOUT_BUNDLE_NAME, { teamToPlay: action.options.team })
-			}
-		}
 	}
 }

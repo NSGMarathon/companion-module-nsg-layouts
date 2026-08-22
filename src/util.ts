@@ -18,10 +18,6 @@ import {
 	DropdownChoiceId
 } from '@companion-module/base/dist/module-api/input'
 import { StageDisplayState } from './types/replicants/stageDisplayState'
-import { FeudBoard } from './types/replicants/feudBoard'
-import { FeudState } from './types/replicants/feudState'
-import { FeudTeamInfo } from './types/replicants/feudTeamInfo'
-import { FeudLowerThirdMode } from './types/replicants/feudLowerThirdMode'
 
 export const LAYOUT_BUNDLE_NAME = 'nsg2-layouts'
 export const LAYOUT_FEED_COUNT = 3
@@ -45,10 +41,6 @@ export interface NsgLayoutsReplicantMap {
 	interstitialVideoState?: InterstitialVideoState
 	todoList?: TodoList
 	stageDisplayState?: StageDisplayState
-	feudBoard?: FeudBoard
-	feudState?: FeudState
-	feudTeamInfo?: FeudTeamInfo
-	feudLowerThirdMode?: FeudLowerThirdMode
 }
 
 export function getTodoListCategoryOptions(socket: NodeCGConnector<NsgBundleMap>): CompanionInputFieldDropdown {
@@ -99,18 +91,6 @@ export function parseTodoListItemOptionId(id: string): { categoryName: string; i
 	return {
 		categoryName: splitId[0],
 		itemName: splitId[1],
-	}
-}
-
-export function getFeudAnswerOption(socket: NodeCGConnector<NsgBundleMap>): CompanionInputFieldDropdown {
-	const board = socket.replicants[LAYOUT_BUNDLE_NAME].feudBoard?.answers ?? []
-
-	return {
-		id: 'answer',
-		type: 'dropdown',
-		label: 'Answer',
-		default: 0,
-		choices: Array.from({ length: 8 }, (_, i) => ({ id: i, label: `#${i + 1} - ${board[i]?.answer ?? '(empty)'}` })),
 	}
 }
 
@@ -195,29 +175,5 @@ export const stageDisplayMessageColorOption: CompanionInputFieldDropdown = {
 		{ id: 'YELLOW', label: 'Yellow' },
 		{ id: 'RED', label: 'Red' },
 		{ id: 'GRAY', label: 'Gray' }
-	]
-}
-
-export const feudTeamOption: CompanionInputFieldDropdown = {
-	id: 'team',
-	label: 'Team',
-	type: 'dropdown',
-	default: 'teamA',
-	choices: [
-		{ id: 'teamA', label: 'Team 1' },
-		{ id: 'teamB', label: 'Team 2' },
-	]
-}
-
-export const feudLowerThirdModeOption: CompanionInputFieldDropdown = {
-	id: 'mode',
-	label: 'Mode',
-	type: 'dropdown',
-	default: 'HIDDEN',
-	choices: [
-		{ id: 'HIDDEN', label: 'Hidden' },
-		{ id: 'TEAM_A', label: 'Team 1' },
-		{ id: 'TEAM_B', label: 'Team 2' },
-		{ id: 'BOTH_TEAMS', label: 'Both teams' }
 	]
 }
